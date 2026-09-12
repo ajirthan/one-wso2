@@ -19,6 +19,13 @@
 // that as "backend not available" and render an appropriate state instead
 // of firing broken requests.
 
+// A configured base URL ending in "/" produces "//path" on every builder that
+// concatenates onto it, and whether that 404s is up to the gateway. Operators
+// paste these out of a console, so it happens. Applied only where the value is
+// path-like enough to invite it — this was three identical inline copies before
+// Finance MIS needed a fourth.
+const stripTrailingSlashes = (url: string): string => url.replace(/\/+$/, "");
+
 export const peopleBackendUrl: string =
   window.config?.ONE_WSO2_PEOPLE_BACKEND_URL ?? "";
 
@@ -715,9 +722,9 @@ export const umtServiceUrls = {
 // Trailing slashes stripped, because every builder below concatenates "/api/..."
 // onto this — a configured value ending in "/" produced "//api/..." on all 52 of
 // them, and whether that 404s depends on the gateway.
-export const marketingOpsBackendUrl: string = (
-  window.config?.ONE_WSO2_MARKETINGOPS_BACKEND_URL ?? ""
-).replace(/\/+$/, "");
+export const marketingOpsBackendUrl: string = stripTrailingSlashes(
+  window.config?.ONE_WSO2_MARKETINGOPS_BACKEND_URL ?? "",
+);
 
 export function isMarketingOpsBackendConfigured(): boolean {
   return Boolean(marketingOpsBackendUrl);
@@ -1108,9 +1115,9 @@ export const dueDiligenceServiceUrls = {
 // every WSO2 environment today; the key exists so a sandbox can point elsewhere.
 //
 // Trailing slashes are stripped so pardotTemplateUrl() can concatenate safely.
-export const pardotBaseUrl: string = (
-  window.config?.ONE_WSO2_PARDOT_BASE_URL ?? "https://pi.pardot.com"
-).replace(/\/+$/, "");
+export const pardotBaseUrl: string = stripTrailingSlashes(
+  window.config?.ONE_WSO2_PARDOT_BASE_URL ?? "https://pi.pardot.com",
+);
 
 export function pardotTemplateUrl(id: number | string): string {
   return `${pardotBaseUrl}/emailTemplate/read/id/${encodeURIComponent(String(id))}`;
@@ -1125,9 +1132,9 @@ export function pardotTemplateUrl(id: number | string): string {
 // to window.config — and it carries WSO2's own Lightning host as the default, since
 // an unset key producing a link that goes nowhere is worse than one that works
 // everywhere but a sandbox.
-export const salesforceBaseUrl: string = (
-  window.config?.ONE_WSO2_SALESFORCE_BASE_URL ?? "https://wso2.lightning.force.com"
-).replace(/\/+$/, "");
+export const salesforceBaseUrl: string = stripTrailingSlashes(
+  window.config?.ONE_WSO2_SALESFORCE_BASE_URL ?? "https://wso2.lightning.force.com",
+);
 
 export function salesforceRecordUrl(object: "Lead" | "Account", id: string): string {
   return `${salesforceBaseUrl}/lightning/r/${object}/${encodeURIComponent(id)}/view`;
@@ -1644,8 +1651,6 @@ export function buildMeetingsUrl(params: {
 // advertises one for every endpoint beside the vanity URL, and the CSP in
 // vite.config.ts allows only *.wso2.com and *.asgardeo.io — so a production
 // build fails those calls with nothing in the console. mis.md §11.2.
-const stripTrailingSlashes = (url: string): string => url.replace(/\/+$/, "");
-
 export const misArrBackendUrl: string = stripTrailingSlashes(
   window.config?.ONE_WSO2_MIS_ARR_BACKEND_URL ?? "",
 );
