@@ -18,6 +18,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { HouseIcon } from "@wso2/oxygen-ui-icons-react";
 import { PERSPECTIVES } from "@constants/perspectives";
 
@@ -128,6 +130,23 @@ vi.mock("@features/umt/api/useUmtGate", () => ({
   useUmtGate: () => ({ ...other, ...noFailure, isAuthorized: false, isAdmin: false }),
 }));
 
+// Every gate the hook asks that this file does not stand in for runs for real,
+// signed out, inside a real QueryClient: its query is disabled, so it asks
+// nothing and offers nothing. Without this, each gate main added to
+// usePerspectiveVisibility reached a real useQuery with no client and failed
+// the whole file.
+vi.mock("@asgardeo/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@asgardeo/react")>()),
+  useAsgardeo: () => ({ isSignedIn: false }),
+}));
+
+function withQueries() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+}
+
 const { usePerspectiveVisibility } = await import("@components/side-rail/usePerspectiveVisibility");
 
 beforeEach(() => {
@@ -138,20 +157,20 @@ beforeEach(() => {
 
 describe("Finance, with the mis preview flag off and the ARR URL set", () => {
   it("asks the MIS backend nothing", () => {
-    renderHook(() => usePerspectiveVisibility());
+    renderHook(() => usePerspectiveVisibility(), { wrapper: withQueries() });
     expect(asked.userInfo, "GET /user-info went out").toBe(false);
     expect(asked.appConfigs, "GET /app-configs went out").toBe(false);
   });
 
   it("is not held up while MIS's /user-info is in flight", () => {
     backend.value = "in-flight";
-    const { result } = renderHook(() => usePerspectiveVisibility());
+    const { result } = renderHook(() => usePerspectiveVisibility(), { wrapper: withQueries() });
     expect(result.current.isResolving).toBe(false);
   });
 
   it("does not report MIS's failure as Finance's", () => {
     backend.value = "failed";
-    const { result } = renderHook(() => usePerspectiveVisibility());
+    const { result } = renderHook(() => usePerspectiveVisibility(), { wrapper: withQueries() });
     expect(result.current.isError).toBe(false);
     expect(result.current.error).toBeUndefined();
   });

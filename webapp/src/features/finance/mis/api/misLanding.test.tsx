@@ -18,6 +18,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { WalletIcon } from "@wso2/oxygen-ui-icons-react";
 import { PERSPECTIVES } from "@constants/perspectives";
@@ -139,6 +141,23 @@ vi.mock("@features/umt/api/useUmtGate", () => ({
   useUmtGate: () => ({ ...other, ...noFailure, isAuthorized: false, isAdmin: false }),
 }));
 
+// Every gate the hook asks that this file does not stand in for runs for real,
+// signed out, inside a real QueryClient: its query is disabled, so it asks
+// nothing and offers nothing. Without this, each gate main added to
+// usePerspectiveVisibility reached a real useQuery with no client and failed
+// the whole file.
+vi.mock("@asgardeo/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@asgardeo/react")>()),
+  useAsgardeo: () => ({ isSignedIn: false }),
+}));
+
+function withQueries() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+}
+
 const { default: PerspectiveLanding } = await import(
   "@components/perspective-landing/PerspectiveLanding"
 );
@@ -157,6 +176,7 @@ function openFinance() {
         <Route path="*" element={<div>somewhere else</div>} />
       </Routes>
     </MemoryRouter>,
+    { wrapper: withQueries() },
   );
 }
 
