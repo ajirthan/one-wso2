@@ -16,24 +16,24 @@
 
 import { describeError } from "@api/errors";
 import { isMisArrConfigured } from "@config/apiConfig";
-import { MIS_ITEM_IDS } from "@constants/misApps";
 import { useMisUserInfo } from "./useMisUserInfo";
 import { useMisAppConfigs } from "./useMisAppConfigs";
 import { MIS_PRIVILEGE, misHasPrivilege } from "./misTypes";
 
-// Which MIS privilege each menu item needs: the ARR one, for every screen in
-// the MIS registry. The source app gates ARR Build, QRR, MRR and ARR Analysis
-// on a single ARR_DASHBOARD number (Config.js:56), so one privilege opens all
-// four at once, and a screen joining MIS_APPS needs no line here. That is why
-// this is a set lookup rather than useMarketingOpsGate's per-item
+// The screens the ARR privilege opens, named one by one. The source app gates
+// ARR Build, QRR, MRR and ARR Analysis on a single ARR_DASHBOARD number
+// (Config.js:56), so this is a set rather than useMarketingOpsGate's per-item
 // ITEM_CAPABILITY map: a map whose every value is the same number says nothing.
+//
+// Named rather than read off MIS_APPS, and that is the point (spec §10.13): an
+// entry joining the registry without a line here is HIDDEN, not opened to 987.
+// Everything else fails closed too — MIS has no unrestricted screen, so unlike
+// the sibling gates there is no open default for an unknown id to fall into.
+// useMisGate.test.tsx turns red on a registry entry left out, which is the cue
+// to decide who it is for and add it.
 //
 // ARR Analysis needs a second condition on top, and it is not a privilege —
 // see ANALYSIS_ITEM_ID below.
-//
-// An id outside the registry is refused. That is stricter than the sibling
-// gates, which fall through to an open default for their unrestricted items —
-// MIS has no unrestricted screen, so there is nothing for a default to open.
 /**
  * The one screen whose existence is a server-side decision as well as an
  * authorization one: `productsUsageEnabled` from `GET /app-configs`.
@@ -49,6 +49,13 @@ import { MIS_PRIVILEGE, misHasPrivilege } from "./misTypes";
  * answer or merely the absence of one. See MisArrAnalysisPage.
  */
 const ANALYSIS_ITEM_ID = "mis-analysis";
+
+const ARR_SCREEN_IDS: ReadonlySet<string> = new Set([
+  "mis-arr-build",
+  "mis-qrr-build",
+  "mis-mrr-build",
+  ANALYSIS_ITEM_ID,
+]);
 
 export interface MisGate {
   // May this menu item be shown? Used by the rail and the pages alike, so a
@@ -87,9 +94,9 @@ export function useMisGate(enabled = true): MisGate {
   const hasArr = misHasPrivilege(userInfo.data, MIS_PRIVILEGE.ARR_DASHBOARD);
 
   const canSee = (itemId: string): boolean => {
-    // Unregistered: refused, so an id this gate has never heard of is
-    // invisible rather than public.
-    if (!MIS_ITEM_IDS.has(itemId)) return false;
+    // Not named above: refused, so a screen this gate has never been told
+    // about is invisible rather than public — registered or not.
+    if (!ARR_SCREEN_IDS.has(itemId)) return false;
     // The flag closes this screen whatever the reader holds, and reaches this
     // screen alone, never the Builds beside it.
     if (itemId === ANALYSIS_ITEM_ID) return hasArr && analysisEnabled;

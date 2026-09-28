@@ -59,6 +59,13 @@ vi.mock("./useMisUserInfo", () => ({
   }),
 }));
 
+// The registry, as a copy a case can add to: the one way to ask the gate about
+// a screen that joined MIS_APPS without being mapped.
+vi.mock("@constants/misApps", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@constants/misApps")>();
+  return { ...actual, MIS_ITEM_IDS: new Set(actual.MIS_ITEM_IDS) };
+});
+
 const { useMisGate } = await import("./useMisGate");
 const { MIS_ITEM_IDS } = await import("@constants/misApps");
 
@@ -144,6 +151,21 @@ describe("an id outside the MIS registry", () => {
   // reports because the screen simply never appears. The registry suite asserts
   // that every item routes to this gate; this asserts the gate opens each of
   // them to the ARR privilege.
+  // Spec §10.13, and the reason the gate names its screens rather than opening
+  // the registry: MIS_APPS is shared with every rail, so an entry that lands
+  // there — a Flash screen coming back, say — must not be opened to the ARR
+  // privilege by default. Hidden until the gate says who it is for.
+  it("is hidden when it joins the registry without a mapping here", () => {
+    state.privileges = [ARR, FLASH];
+    const registry = MIS_ITEM_IDS as Set<string>;
+    registry.add("mis-unmapped");
+    try {
+      expect(gate().canSee("mis-unmapped")).toBe(false);
+    } finally {
+      registry.delete("mis-unmapped");
+    }
+  });
+
   it("is not something any registered MIS screen quietly became", () => {
     state.privileges = [ARR];
     for (const id of MIS_ITEM_IDS) {
