@@ -111,6 +111,16 @@ vi.mock("@features/par/api/useParData", () => ({
 vi.mock("@features/par/api/useParIsAdmin", () => ({
   useParIsAdmin: () => ({ isAdmin: false, isLoading: false }),
 }));
+vi.mock("@features/promotion/api/usePromotionRoles", () => ({
+  usePromotionPrivileges: () => ({
+    isLead: false,
+    isFunctionalLead: false,
+    isHrAdmin: false,
+    isPromotionBoardMember: false,
+    isLoading: false,
+    isError: false,
+  }),
+}));
 vi.mock("@features/infra/api/useInfraGate", () => ({
   useInfraGate: () => ({ ...other, ...noFailure, isAuthorized: false, isAdmin: false }),
 }));
