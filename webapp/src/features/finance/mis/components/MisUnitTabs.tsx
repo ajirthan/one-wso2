@@ -157,9 +157,11 @@ function CustomUnits({
         direction="row"
         sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}
       >
+        {/* The source's words (`TableNavigation.js:356`), and so its "Product
+            Units": a second list beside the Business Units, recorded in
+            CONTEXT.md under Business Unit. */}
         <Typography variant="body2" color="text.secondary">
-          Choose either a set of business units or a set of product units — a Build is cut one way
-          or the other.
+          Select a combination of either a set of Business Units or Product Units.
         </Typography>
         <Button size="small" variant="outlined" startIcon={<RotateCcwIcon size={14} />} onClick={onReset}>
           Reset

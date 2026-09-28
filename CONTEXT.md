@@ -184,13 +184,24 @@ _Avoid_: history, lookback, number of years
 The product line a figure is attributed to.
 _Avoid_: product, segment, division
 
-The one place "product" is the right word is **Products in use** — how many distinct products one
+One place "product" is the right word is **Products in use** — how many distinct products one
 account actually runs. That is a property of the ACCOUNT rather than of the figure, the ARR backend
 sends it per account as `productsInUse` and filters on `numberOfProductsInUse`, and ARR Analysis puts
 the two side by side as separate controls ("Business Units" and "# Products In Use"). So they are two
 concepts that happen to count similar things, not one concept with two names — the source runs them
 together by calling its Business Unit state `products`, and the port does not.
-_For the count_: **Products in use**. _For the attribution_: **Business Unit**.
+
+The other is **Product Units**, the source's name for the second list a custom unit selection offers,
+kept on screen under [ADR 0003](docs/adr/0003-bug-for-bug-parity-during-the-parallel-period.md).
+`/app-configs` sends two lists, `businessUnits` (`IAM_BU`) and `productUnits` — one Business Unit's
+software or cloud book (`IAM_CLOUD`, `APIM_SOFTWARE`) — and the source heads them "Business Units"
+and "Product Units" under "Select a combination of either a set of Business Units or Product Units."
+(`arrDashboard/components/TableNavigation.js:356`, `:370` and `:386`; the Region Summary repeats the
+two headings at `RegionSummaryTabs.js:326` and `:341`). A selection takes one list or the other. So
+the word reaches that list and the names built off it — `productUnits`, `customProductUnits`,
+`?customProduct=` — and nothing else; what a figure is attributed to is still its Business Unit.
+_For the count_: **Products in use**. _For the custom selection's second list_: **Product Units**.
+_For the attribution_: **Business Unit**.
 
 **Channel / Direct**:
 The partner model a customer was sold through.
