@@ -177,6 +177,17 @@ describe("a failed authorization check", () => {
     expect(gate().canSee("mis-arr-build")).toBe(false);
     expect(gate().canSee("mis-flash")).toBe(false);
   });
+
+  // A switched-off gate asked nothing, but it can still be handed a failure: an
+  // identity error is folded into the query's result whether or not the query
+  // was enabled (foldIdentityError). Reported, it would put a MIS failure on
+  // every Finance landing while the `mis` flag is off.
+  it("is not reported while the gate is switched off", () => {
+    state.isError = true;
+    const off = renderHook(() => useMisGate(false)).result.current;
+    expect(off.isError).toBe(false);
+    expect(off.errorMessage).toBeUndefined();
+  });
 });
 
 // A gate that is switched off must never report itself mid-flight: the rail

@@ -108,9 +108,12 @@ export function useMisGate(enabled = true): MisGate {
     // never clear, and `usePerspectiveVisibility` holds the Finance landing
     // until every gate has. useDueDiligenceGate has the same guard.
     isResolving: enabled && isMisArrConfigured() && userInfo.isPending,
-    isError: userInfo.isError,
+    // `enabled` again: a disabled query asks nothing, but an identity failure is
+    // folded into its result all the same (foldIdentityError), and reported it
+    // would put MIS's failure on a screen with no MIS in it.
+    isError: enabled && userInfo.isError,
     // describeError never surfaces the raw response body — see @api/errors.
-    errorMessage: userInfo.isError ? describeError(userInfo.error) : undefined,
+    errorMessage: enabled && userInfo.isError ? describeError(userInfo.error) : undefined,
     retry: () => void userInfo.refetch(),
   };
 }
