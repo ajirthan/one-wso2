@@ -75,10 +75,17 @@ describe("the column a request is compared against", () => {
     // (`useArrTableSummary.js:476-487`). Quarterly compares against the quarter
     // immediately before, as two balance dates: the column's own opening, and
     // three months before it (`:487-499`).
+    //
+    // "Three months before" 31 December is 1 OCTOBER, not 30 September: the
+    // source's `setMonth` keeps the day of the month, and a 31 September rolls
+    // over. Wrong-looking, and reproduced under ADR 0003 — it is the opening the
+    // old app asks for in Colombo, where the Build is reconciled (spec §8). The
+    // leftmost Quarterly column always opens on 31 December, so this is the
+    // only case it meets.
     const quarters = getQuarterlyPeriods({ yearsBack: 1, asOf: { year: 2026, month: 9, day: 12 } });
     const [first] = arrSummaryRequests(quarters, DEFAULTS, MIS_PERIODS.QUARTERLY);
     expect(first.startDate).toBe("2024-12-31");
-    expect(first.prevColDateRange).toEqual({ startDate: "2024-09-30", endDate: "2024-12-31" });
+    expect(first.prevColDateRange).toEqual({ startDate: "2024-10-01", endDate: "2024-12-31" });
   });
 
   it("is the previous MONTH for the first column of a Monthly Build", () => {

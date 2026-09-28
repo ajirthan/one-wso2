@@ -27,7 +27,7 @@
 // what the grids and the Excel export show; the wire wants `yyyy-MM-dd`. The
 // source converts at the same boundary and so does this.
 
-import { addYears, endOfMonth, formatCivilDate } from "../util/misPacificTime";
+import { addYears, formatCivilDate, lastDayOfMonth } from "../util/misPacificTime";
 import {
   MIS_PERIODS,
   typeValueOf,
@@ -141,16 +141,29 @@ function firstColumnComparison(
   return { startDate: aYearEarlier(startDate), endDate: aYearEarlier(endDate) };
 }
 
-/** `2025-12-31` → `2025-09-30`, keeping to the end of the earlier month. */
+/**
+ * `2025-12-31` → `2025-10-01`: the source's `setMonth`, on the civil date.
+ *
+ * The day of the month is kept, and one the earlier month is too short for
+ * rolls into the month after — so 31 December less three months is "31
+ * September", which is 1 October. Wrong-looking, and reproduced under ADR 0003:
+ * it is the opening the old app asks for in Colombo (spec §8).
+ */
 function monthsEarlier(wireDate: string, months: number): string {
-  const [year, month] = wireDate.split("-").map(Number);
+  const [year, month, day] = wireDate.split("-").map(Number);
   let targetYear = year;
   let targetMonth = month - months;
   while (targetMonth < 1) {
     targetMonth += 12;
     targetYear -= 1;
   }
-  return toWireDate(formatCivilDate(endOfMonth(targetYear, targetMonth)));
+  const lastDay = lastDayOfMonth(targetYear, targetMonth);
+  // Never out of December: it is as long as a month gets.
+  const target =
+    day <= lastDay
+      ? { year: targetYear, month: targetMonth, day }
+      : { year: targetYear, month: targetMonth + 1, day: day - lastDay };
+  return toWireDate(formatCivilDate(target));
 }
 
 /** `2026-09-12` → `2025-09-12`, clamping a leap day rather than rolling it. */

@@ -556,6 +556,9 @@ common year rather than rolled forward.** `new Date(2025, 1, 29)` is 1 March, so
 year-to-date "as at 29 February" silently includes a day of March in three years out of four. The port
 ends those years on the 28th. Flagged rather than reproduced because the parallel period contains no
 29 February — the next one is in 2028 — so there is no reconciliation this can break.
+The leftmost Annual column's comparison — the same range a year earlier — clamps a 29 February the
+same way, where the source's `setFullYear` rolls it to 1 March. Reachable only with a 29 February in
+that column's range, so the same reasoning holds.
 
 **The Build's columns are fetched in parallel, one query each.** `POST /arr-summary` answers one
 column, so a Build is one call per column — five at the default Years Back. The source runs them in a
@@ -805,7 +808,8 @@ them. The customers table's Delayed window ignores the flag, as the source does.
 **The leftmost column is compared against three different things, one per Period.** It has no column
 to its left and the y/y rows still need one, and the source answers differently for each
 (`useArrTableSummary.js:476-507`): Annually takes the same window a year earlier, Quarterly the
-previous QUARTER (the column's own opening, and the balance three months before it), Monthly the
+previous QUARTER (the column's own opening, and the balance three months before it — which
+opens on 1 October rather than 30 September, see §8), Monthly the
 previous MONTH — the column's own opening paired with the FIRST day of the month it falls in. That
 last is an asymmetry worth naming: every other range in this port is two balance dates.
 
@@ -1287,6 +1291,17 @@ decision about the whole feature rather than about this dialog.
 drill-down send the same `customerArrType`, and only the DATE differs — the opening one is read at the
 opening snapshot and sends no `startDate` at all. It looks like a bug on first reading and is not: the
 question "who was in the book" is the same at either end of a Period.
+
+**The leftmost Quarterly column is compared against a range opening on 1 October, not 30
+September.** Its comparison is the previous quarter: the column's own opening, 31 December, and the
+balance "three months before it", which the source computes with `setMonth(getMonth() - 3)`
+(`useArrTableSummary.js:492-498`). `setMonth` keeps the day of the month, so 31 December less three
+months is 31 September, which rolls over to 1 October — in Colombo and in UTC. (In California the
+source's UTC-to-local shift happens to land it on 30 September.) Reproduced on the civil date, so the
+port asks `POST /arr-summary` for the range the old app asks for where the Build is reconciled, and
+the leftmost y/y figure agrees with it. It is the only case the rule meets: the leftmost Quarterly
+column always opens on 31 December. After the parallel period the opening is the previous
+quarter-end, 30 September.
 
 **The Region Summary's total does not foot against its own rows.** A region's Total column is
 whatever the backend sent as `all`; the Total Exit ARR row's Total is the five business units added
