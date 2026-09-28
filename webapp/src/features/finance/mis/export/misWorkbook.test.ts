@@ -105,6 +105,31 @@ describe("the workbook that is written", () => {
     expect(MIS_NUMBER_FORMATS.PERCENTAGE).toBe("0.00%");
     expect(MIS_NUMBER_FORMATS.PERCENTAGE).not.toBe(MIS_NUMBER_FORMATS.CURRENCY);
   });
+
+  // Account and customer names arrive from the backend and are written as they
+  // came, so a name that opens with = + - or @ is exactly what formula injection
+  // needs. exceljs types a plain string as text whatever it starts with, which
+  // is what keeps this safe — and it is a property of the library, not of this
+  // code, so a version bump or a cell written some other way could lose it.
+  it("writes text that looks like a formula as the text it is", async () => {
+    const names = ["=SUM(A1:A10)", "+1", "-1", "@SUM(A1)"];
+    const workbook = await roundTrip({
+      sheets: [
+        {
+          name: "Customers",
+          columns: [{ width: 34 }],
+          rows: names.map((name) => ({ cells: [{ value: name }] })),
+        },
+      ],
+    });
+
+    const sheet = workbook.getWorksheet("Customers")!;
+    names.forEach((name, index) => {
+      const cell = sheet.getCell(index + 1, 1);
+      expect(cell.type, name).toBe(ExcelJS.ValueType.String);
+      expect(cell.value, name).toBe(name);
+    });
+  });
 });
 
 // Excel's own rules, not ours: a sheet name is at most 31 characters and may
