@@ -95,11 +95,18 @@ vi.mock("@features/due-diligence/api/useDueDiligenceGate", () => ({
   useDueDiligenceGate: () => ({ ...other, ...noFailure }),
 }));
 vi.mock("@features/security/api/useSecurityGate", () => ({ useSecurityGate: () => other }));
+vi.mock("@features/sales/api/useSalesGate", () => ({
+  useSalesRailGate: () => ({ ...other, ...noFailure, errorMessage: undefined }),
+}));
+vi.mock("@features/my/api/useMeProfile", () => ({
+  useMeProfile: () => ({ data: undefined, isLoading: false }),
+}));
 vi.mock("@features/subscriptions/api/useSubscriptionGate", () => ({
   useSubscriptionGate: () => ({ ...other, ...noFailure, isAdmin: false }),
 }));
 vi.mock("@features/par/api/useParData", () => ({
   useParCanSeeLeadPortal: () => ({ canSee: false, isLoading: false }),
+  useParEmployeeItemVisible: () => ({ canSee: false, isLoading: false }),
 }));
 vi.mock("@features/par/api/useParIsAdmin", () => ({
   useParIsAdmin: () => ({ isAdmin: false, isLoading: false }),
