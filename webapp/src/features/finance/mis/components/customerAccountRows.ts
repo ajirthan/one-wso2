@@ -107,7 +107,7 @@ const text = (value: string | number | undefined): string =>
  * This is the table that made `BuildTable` take a LIST of identity columns
  * rather than one pinned label: the Subscription Build says which movement a
  * row is and stops, and this one has to say which ACCOUNT a row is — who owns
- * it, where it bills, when it activated and when it churned.
+ * it, where it bills, when it activated and when it was lost.
  *
  * Only Account Name is frozen, which is what the source freezes. Freezing more
  * would eat the width the sixty figure columns need, and `leadColumnOffsets`
@@ -330,7 +330,7 @@ const CUSTOMER_TOTAL_IDENTITY = "-";
  *
  * The union is the point. Each column is its own `POST /accounts` read at that
  * column's closing date, so a customer won in the second year is missing from
- * the first response and a churned one is missing from the last. Taking any
+ * the first response and a lost one is missing from the last. Taking any
  * single column's list would drop precisely the customers a Build is read to
  * find.
  *
@@ -346,7 +346,7 @@ export interface CustomerRows {
    * The account each row was built from, for the identity columns.
    *
    * Those columns show facts about the ACCOUNT — its owner, region, industry,
-   * activation and churn dates — not about any one column's reading of it, so
+   * `activationDate` and `churnDate` — not about any one column's reading of it, so
    * they come from one base record rather than being re-read per Period. The
    * source calls this `baseAccount` and fills it the same way.
    */
@@ -449,7 +449,7 @@ export function customerIdentityText(
  * The undefined matters and is not tidiness. A customer absent from a column
  * has NO figure; a customer present with nothing owing has zero. Rendering the
  * first as `0` invents a data point, and on this table it reads as a customer
- * who churned to nothing rather than one who had not been won yet.
+ * who was Lost rather than one who had not been won yet.
  */
 export function customerFigure(
   account: AccountsResponse | undefined,

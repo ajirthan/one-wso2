@@ -94,9 +94,9 @@ describe("which customers the table has rows for", () => {
 describe("a customer book that changes between columns", () => {
   // Every column is its own `POST /accounts`, read at that column's closing
   // date. A customer won in the second year is absent from the first response
-  // and present in the second, and a churned one is the reverse. The table has
+  // and present in the second, and a lost one is the reverse. The table has
   // to show a row for both, or a customer disappears from a report the moment
-  // they churn — which is exactly the figure the reader is looking for.
+  // they are Lost — which is exactly the figure the reader is looking for.
 
   it("unions the accounts across every column", () => {
     const rows = customerRowsOf([[account("a1", "Northwind Bank")], [account("a2", "Contoso")]]);
@@ -246,8 +246,8 @@ describe("the figure in a cell", () => {
     // The distinction the whole table turns on. A customer who was not in the
     // book at that date has NO figure; a customer who was, with nothing owing,
     // has zero. Rendering the first as 0 invents a data point, and on this
-    // table that reads as a customer who churned to nothing rather than one who
-    // had not been won yet.
+    // table that reads as a customer who was Lost rather than one who had not
+    // been won yet.
     for (const column of CUSTOMER_SUB_COLUMNS) {
       expect(customerFigure(undefined, column)).toBeUndefined();
     }

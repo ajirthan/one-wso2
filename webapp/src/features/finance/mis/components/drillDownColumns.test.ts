@@ -64,9 +64,9 @@ describe("which columns a drill-down shows", () => {
   it("inserts the two Lost columns after the Amount, not at the end", () => {
     // The source builds `[...BASE, ...LOST, ...INTERMEDIATE]`, so Lost Reason
     // Category and Lost Reason land at positions 4 and 5 — immediately right of
-    // the amount that left and immediately left of the churn date. Appending
-    // them instead would put the reason a customer churned eight columns away
-    // from the fact that they did.
+    // the amount that left and immediately left of ARR Churn Date. Appending
+    // them instead would put the reason a customer was lost eight columns away
+    // from the fact that they were.
     expect(keysFor("lost")).toEqual([
       "accountId",
       "name",

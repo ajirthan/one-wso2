@@ -141,9 +141,9 @@ const SECTIONS: readonly SectionSpec[] = [
       { id: "net-new-yoy", label: MIS_ROW_LABELS.YOY_GROWTH, field: "netNewYoyGrowth" },
       { id: "total-new-arr", label: MIS_ROW_LABELS.TOTAL_NEW_ARR, field: "totalNewArr" },
       { id: "total-new-arr-yoy", label: MIS_ROW_LABELS.YOY_GROWTH, field: "totalNewArrYoyGrowth" },
-      { id: "total-churn-arr", label: MIS_ROW_LABELS.TOTAL_CHURN_ARR, field: "totalChurnArr" },
+      { id: "total-lost-arr", label: MIS_ROW_LABELS.TOTAL_CHURN_ARR, field: "totalChurnArr" },
       {
-        id: "total-churn-arr-yoy",
+        id: "total-lost-arr-yoy",
         label: MIS_ROW_LABELS.YOY_GROWTH,
         field: "totalChurnArrYoyGrowth",
       },
@@ -195,7 +195,7 @@ const SECTIONS: readonly SectionSpec[] = [
         field: "percentNewTotal",
       },
       {
-        id: "percent-increases-upsells-total",
+        id: "percent-expansions-total",
         label: MIS_ROW_LABELS.PERCENT_INCREASES_UPSELLS_TOTAL,
         field: "percentIncreasesUpsellsTotal",
       },

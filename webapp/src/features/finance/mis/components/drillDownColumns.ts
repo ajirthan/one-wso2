@@ -121,7 +121,7 @@ const BASE: readonly DrillDownColumn[] = [
   { key: "amount", label: "Amount (USD)", width: 140, value: amount, rawValue: (c) => c.amount },
 ];
 
-/** Shown only on a Lost row, between the amount and the churn date. */
+/** Shown only on a Lost row, between the amount and ARR Churn Date. */
 const LOST: readonly DrillDownColumn[] = [
   {
     key: "lostReasonCategory",
