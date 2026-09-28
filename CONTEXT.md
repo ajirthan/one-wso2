@@ -80,7 +80,7 @@ _Avoid_: start/end balance, BoP/EoP
 The three ways existing recurring revenue moves between Opening and Closing. New business is New.
 _Avoid_: upsell, downgrade, churn
 
-One ported screen uses different words for these, and is meant to. The Region Summary's **All ARR
+A few ported labels use different words for these, and are meant to. The Region Summary's **All ARR
 Metrics** view heads its columns `Expansion`, `Reduction`, `Loss`, `First Sale` and `Closing ARR`
 where the Subscription Build writes `Expansions`, `Reductions`, `Lost`, `New` and `Ending ARR` — the
 source is inconsistent between two of its own screens, and the port reproduces that under
@@ -90,7 +90,25 @@ glossary breaches to fix; harmonising the two screens is a decision for after th
 The carve-out reaches the column KEYS those headers derive from as well — `REGION_METRICS_SUB_COLUMNS`
 names them off the label, so `loss` and `first-sale` sit there beside the wire fields `lost` and
 `firstSale`, and renaming either half would only make the column disagree with itself.
-Everywhere else — prose, identifiers, every other table — the words are **Lost** and **New**.
+
+The source shows its readers "churn" and "upsell" in four more labels, and the port keeps those
+verbatim for the same reason:
+
+- `Total Churn ARR` (Lost) and `% Increases/Upsells Total` (Expansion), two of the Subscription
+  Build's row labels — `arrDashboard/utils/rowHeaders.js:24` and `:33`, with `Ending ARR` (Closing)
+  beside them at `:20`.
+- `Churn Date`, a Software/Cloud Customers column — `arrDashboard/utils/tableUtils.js:849`.
+- `ARR Churn Date`, a customer drill-down column —
+  `arrDashboard/components/ArrSummaryCustomersDialog.js:57`.
+
+It reaches the names built off those labels, too. `MIS_ROW_LABELS`' keys `TOTAL_CHURN_ARR`,
+`PERCENT_INCREASES_UPSELLS_TOTAL` and `ENDING_ARR` each name their own label, so the map reads
+against `rowHeaders.js` line by line (an `EXIT_ARR: "Ending ARR"` could not be checked at a glance),
+and the customers table's column key `churn-date` is named off its label as `loss` is. The ARR
+backend's fields `totalChurnArr`, `percentIncreasesUpsellsTotal` and `churnDate` are wire names the
+port does not own.
+Everywhere else — prose, identifiers, row ids, every other table — the words are **Lost**,
+**Expansion** and **New**.
 
 **Exit ARR**:
 Recurring revenue as at the end of a Period, reported by region or business unit. A BALANCE, which is

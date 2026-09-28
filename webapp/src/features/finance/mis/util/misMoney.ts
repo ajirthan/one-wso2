@@ -32,8 +32,9 @@
 // That default is the whole foot-gun, and it is not ported.)
 //
 // Ported from digiops-finance `arrDashboard/utils/valueFormat.js` and
-// `rowHeaders.js`. Every label is verbatim: they are what the ARR backend sends
-// back as a row's `rowHeader`, so they are wire values, not display strings.
+// `rowHeaders.js`. Every label is verbatim: they are the row headers the source
+// shows, which finance reconciles against during the parallel period (ADR 0003),
+// so they are a transcript rather than this app's own wording.
 
 import { MIS_SCALES, type MisScale } from "./misViewVocabulary";
 
@@ -43,13 +44,10 @@ const CURRENCY_CODE = "USD";
 /**
  * The row labels the Build and the Analysis grids share.
  *
- * Three keys say words CONTEXT.md tells us to avoid — `ENDING_ARR` (the
- * glossary's term is Exit ARR), `TOTAL_CHURN_ARR` (Lost) and
- * `PERCENT_INCREASES_UPSELLS_TOTAL` (Expansion). They keep them because a key
- * here names its own VALUE, and the value is what the ARR backend sends as a
- * row's `rowHeader`: renaming the key to the glossary's word would leave a
- * `EXIT_ARR: "Ending ARR"` that nobody can check against the source at a
- * glance. The glossary governs prose and new names; this map is a transcript.
+ * `ENDING_ARR`, `TOTAL_CHURN_ARR` and `PERCENT_INCREASES_UPSELLS_TOTAL` say
+ * words the glossary avoids, and keep them: each key names its own label, and
+ * the labels are the source's. The exception is recorded in CONTEXT.md, under
+ * Expansion / Reduction / Lost, rather than here.
  */
 export const MIS_ROW_LABELS = {
   OPENING_ARR: "Opening ARR",
