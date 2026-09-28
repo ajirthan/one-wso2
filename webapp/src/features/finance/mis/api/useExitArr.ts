@@ -46,7 +46,7 @@ import { useColumnQueries } from "./useColumnQueries";
 // open two files to do it.
 
 /** One summary column, and whatever is known about it so far. */
-export interface ExitArrColumn<TResponse> {
+export interface SummaryColumn<TResponse> {
   /**
    * The column header, and its identity. `As of {end}` on the two Exit ARR
    * summaries; `{opening} - {end}` on All ARR Metrics, which reports a movement
@@ -59,8 +59,13 @@ export interface ExitArrColumn<TResponse> {
   isError: boolean;
 }
 
-export interface ExitArrState<TResponse> {
-  columns: ExitArrColumn<TResponse>[];
+/**
+ * What each of the three hooks returns. Named for the columns rather than for
+ * Exit ARR because All ARR Metrics returns it too, and that is a movement, not
+ * a balance.
+ */
+export interface SummaryColumnsState<TResponse> {
+  columns: SummaryColumn<TResponse>[];
   isLoading: boolean;
   isError: boolean;
   errorMessage: string;
@@ -81,7 +86,7 @@ export function useExitArrByRegion(
   filters: MisAppliedFilters,
   isSalesRegionSummary: boolean,
   enabled = true,
-): ExitArrState<RegionExitResponse> {
+): SummaryColumnsState<RegionExitResponse> {
   const bodies = useMemo(
     () => regionExitRequests(ranges, filters, isSalesRegionSummary),
     [ranges, filters, isSalesRegionSummary],
@@ -101,7 +106,7 @@ export function useExitArrByBU(
   ranges: readonly MisDateRange[],
   filters: MisAppliedFilters,
   enabled = true,
-): ExitArrState<BuFigures> {
+): SummaryColumnsState<BuFigures> {
   const bodies = useMemo(() => buExitRequests(ranges, filters), [ranges, filters]);
   return useSummaryColumns<BuFigures>({
     name: "bu-exit",
@@ -130,7 +135,7 @@ export function useRegionMetrics(
   filters: MisAppliedFilters,
   isSalesRegionSummary: boolean,
   enabled = true,
-): ExitArrState<RegionMetricsResponse> {
+): SummaryColumnsState<RegionMetricsResponse> {
   const bodies = useMemo(
     () => regionMetricsRequests(ranges, filters, isSalesRegionSummary),
     [ranges, filters, isSalesRegionSummary],
@@ -163,7 +168,7 @@ function useSummaryColumns<TResponse>({
   label: (range: MisDateRange) => string;
   ranges: readonly MisDateRange[];
   enabled: boolean;
-}): ExitArrState<TResponse> {
+}): SummaryColumnsState<TResponse> {
   // Bodies and labels stay index-aligned: a body is what a column is fetched
   // with, and pairing them anywhere else would be two lists that could fall out
   // of step.

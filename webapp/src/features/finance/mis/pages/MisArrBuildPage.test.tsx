@@ -41,7 +41,7 @@ import {
 } from "@features/finance/mis/util/misPeriods";
 import type { ArrSummaryState } from "@features/finance/mis/api/useArrSummary";
 import type { CustomerAccountsState } from "@features/finance/mis/api/useCustomerAccounts";
-import type { ExitArrState } from "@features/finance/mis/api/useExitArr";
+import type { SummaryColumnsState } from "@features/finance/mis/api/useExitArr";
 import type {
   BuFigures,
   RegionExitResponse,
@@ -145,12 +145,12 @@ vi.mock("@features/finance/mis/api/useCustomerAccounts", () => ({
 }));
 
 const regionExit = {
-  value: {} as ExitArrState<RegionExitResponse>,
+  value: {} as SummaryColumnsState<RegionExitResponse>,
   askedBySalesRegion: [] as boolean[],
 };
-const buExit = { value: {} as ExitArrState<BuFigures> };
+const buExit = { value: {} as SummaryColumnsState<BuFigures> };
 const regionMetrics = {
-  value: {} as ExitArrState<RegionMetricsResponse>,
+  value: {} as SummaryColumnsState<RegionMetricsResponse>,
   askedBySalesRegion: [] as boolean[],
   askedFilters: [] as MisAppliedFilters[],
 };
@@ -381,7 +381,7 @@ const THIS_YEAR_AS_OF = inZone("Asia/Colombo", () => {
   return asOfColumnLabel(columns[columns.length - 1]);
 });
 
-const regionsLoaded = (response: RegionExitResponse): ExitArrState<RegionExitResponse> => ({
+const regionsLoaded = (response: RegionExitResponse): SummaryColumnsState<RegionExitResponse> => ({
   columns: [{ label: THIS_YEAR_AS_OF, response, isError: false }],
   isLoading: false,
   isError: false,
@@ -408,7 +408,7 @@ const THIS_YEAR_SPAN = THIS_YEAR;
 
 const metricsLoaded = (
   response: RegionMetricsResponse,
-): ExitArrState<RegionMetricsResponse> => ({
+): SummaryColumnsState<RegionMetricsResponse> => ({
   columns: [{ label: THIS_YEAR_SPAN, response, isError: false }],
   isLoading: false,
   isError: false,
@@ -416,7 +416,7 @@ const metricsLoaded = (
   retry: () => {},
 });
 
-const unitsLoaded = (response: BuFigures): ExitArrState<BuFigures> => ({
+const unitsLoaded = (response: BuFigures): SummaryColumnsState<BuFigures> => ({
   columns: [{ label: THIS_YEAR_AS_OF, response, isError: false }],
   isLoading: false,
   isError: false,
