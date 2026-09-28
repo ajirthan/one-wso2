@@ -84,7 +84,8 @@ describe("the Finance MIS backend", () => {
   });
 
   // ADR 0005. A deployment still carrying the Flash and Admin keys configures
-  // nothing from them: no guard and no service map is built for either.
+  // nothing from them: no `isMis…Configured()` check and no service map is
+  // built for either.
   it("reads no Flash or Admin URL, even where a config still carries them", async () => {
     const c = (await loadWith(STAGING)) as Record<string, unknown>;
     for (const name of [

@@ -381,8 +381,8 @@ key construction: the key must include the serialised body, not just the URL.
 
 The Flash and Admin rows describe the MIS app's contract: One WSO2 calls the ARR service alone
 (ADR 0005), so only `isMisArrConfigured()` exists here. While the Flash was being ported each service
-had its own guard, so an unset Admin URL (deprecated, suspended in Production, §2.5) could not take
-the ARR screens down.
+had its own `isMis…Configured()` check, so an unset Admin URL (deprecated, suspended in Production,
+§2.5) could not take the ARR screens down.
 
 Base URLs differ by environment in both host *and* path — `apis.wso2.com/.../v1` in production,
 `apis-stg.wso2.com/.../v1.0` in staging — so the version segment is part of the configured URL rather

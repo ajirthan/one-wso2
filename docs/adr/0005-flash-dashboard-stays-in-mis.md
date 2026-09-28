@@ -12,7 +12,8 @@ rebase rewrites the hashes and the subjects survive it.
 ## Consequences
 
 - One WSO2 is configured for one MIS backend, the ARR service. The Flash and Admin services serve
-  only the Flash Dashboard, so they have no config key, no guard and no service map.
+  only the Flash Dashboard, so they have no config key, no `isMis…Configured()` check and no service
+  map.
 - `/user-info` still returns both of MIS's privilege numbers, and One WSO2 reads only `987`. `789`
   opens nothing here. A Flash-only holder sees no MIS entry in One WSO2 and keeps using the MIS app,
   which is also why the "you have MIS access, just not to this screen" wording is gone.
