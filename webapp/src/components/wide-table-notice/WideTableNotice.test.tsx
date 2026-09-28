@@ -158,6 +158,20 @@ describe("dismissing it", () => {
     render(<WideTableNotice tableMinWidth={SUBSCRIPTION_BUILD} />);
     expect(notice()).not.toBeInTheDocument();
   });
+
+  // Spec §10.22f. A wide viewport takes the notice away by itself, and that must
+  // not count as the reader taking their dismissal back. Someone who widens the
+  // window for a moment and narrows it again has not forgotten that the table
+  // scrolls. Asked of the SAME mounted notice, because a remount re-reads storage
+  // and would hide a dismissal that only lived in state being thrown away.
+  it("keeps it dismissed after the viewport has been wide again", async () => {
+    showNarrow();
+    await userEvent.setup().click(screen.getByRole("button", { name: /dismiss/i }));
+
+    setViewportWidth(1280);
+    setViewportWidth(400);
+    expect(notice()).not.toBeInTheDocument();
+  });
 });
 
 // `localStorage` throws under private browsing and blocked site data, and this
