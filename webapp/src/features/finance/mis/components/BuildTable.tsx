@@ -391,6 +391,8 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                       under its own column and not as part of the row's name. */}
                   {lead.slice(1).map((column, offsetIndex) => {
                     const index = offsetIndex + 1;
+                    // Asked once: the title and the text are the same value.
+                    const text = leadCell?.(row, column) ?? "";
                     return (
                       <TableCell
                         key={column.key}
@@ -409,7 +411,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                             fragment that happens to fit. */}
                         <Typography
                           component="span"
-                          title={leadCell?.(row, column) ?? ""}
+                          title={text}
                           sx={{
                             fontSize: 12.5,
                             lineHeight: 1.6,
@@ -419,7 +421,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                             display: "block",
                           }}
                         >
-                          {leadCell?.(row, column) ?? ""}
+                          {text}
                         </Typography>
                       </TableCell>
                     );
