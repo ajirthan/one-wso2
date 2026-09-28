@@ -92,7 +92,9 @@ export const booleanParam: QueryParamCodec<boolean> = {
  * that already reads `%2C` is not mistaken for one. Only those two: a value
  * without either is written exactly as before, so every link that already
  * works still does. Decoded in one pass, so `%252C` comes back as the `%2C` it
- * was rather than being unescaped twice into a comma.
+ * was rather than being unescaped twice into a comma. This is the value's own
+ * escape, inside the URL's: URLSearchParams encodes it again, so the address
+ * bar shows a comma in a value as `%252C`.
  */
 export const listParam: QueryParamCodec<string[]> = {
   parse: (raw) => {

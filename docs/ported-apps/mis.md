@@ -333,7 +333,7 @@ Rules carried over from the source verbatim, because bookmarked links must keep 
 | `channel` | `All`, `Channel`, `Direct` | |
 | `cumulative` | `1`/`0` | Quarterly and Monthly only |
 | `scale` | `k` | Thousands; units is the default |
-| `region`, `subRegion`, `billingCountry`, `shippingCountry`, `industry`, `subIndustry`, `owner`, `techOwner`, `channelMgr` | applied list filters | Comma-separated; a comma inside a value is written `%2C` and a `%` as `%25`, so "Korea, Republic of" stays one value |
+| `region`, `subRegion`, `billingCountry`, `shippingCountry`, `industry`, `subIndustry`, `owner`, `techOwner`, `channelMgr` | applied list filters | Comma-separated; a comma inside a value is escaped `%2C` and a `%` `%25` before the URL's own encoding, so "Korea, Republic of" stays one value — in the address bar that reads `Korea%252C+Republic+of` |
 
 **Scale is the one ambiguity to settle in review.** The source writes `scale=k` to the URL but
 deliberately does not count it when deciding whether a link carried view state — its comment reads
@@ -550,6 +550,12 @@ range a year earlier**, which the source computes with `new Date(startDate)` —
 then `setFullYear`, which operates in LOCAL time (`useArrTableSummary.js`). East of California that
 lands a day early, so in Colombo the source compares the first column against a range one day short.
 The port shifts the civil date instead. Same reasoning, same exception, same note for §10.37.
+
+The Monthly comparison meets it too. Its start is the first of the month the leftmost column opens
+in, which the source builds as local midnight (`new Date(y, m, 1)`) and writes with `toISOString()` —
+so east of UTC it lands on the last day of the month BEFORE: `2025-07-31` in Colombo for a
+`2025-08-31` opening, where UTC and California give `2025-08-01`. The port keeps the civil first of
+the month. Same reasoning, same note for §10.37.
 
 One further case differs, and only on one day in four years: **a 29 February as-of is clamped into a
 common year rather than rolled forward.** `new Date(2025, 1, 29)` is 1 March, so the source's
@@ -810,8 +816,9 @@ to its left and the y/y rows still need one, and the source answers differently 
 (`useArrTableSummary.js:476-507`): Annually takes the same window a year earlier, Quarterly the
 previous QUARTER (the column's own opening, and the balance three months before it — which
 opens on 1 October rather than 30 September, see §8), Monthly the
-previous MONTH — the column's own opening paired with the FIRST day of the month it falls in. That
-last is an asymmetry worth naming: every other range in this port is two balance dates.
+previous MONTH — the column's own opening paired with the FIRST day of the month it falls in (the
+civil first; in Colombo the source writes the day before, see §7). That last is an asymmetry worth
+naming: every other range in this port is two balance dates.
 
 **The Years Back column slice does not apply off Annually.** §9 describes the source computing annual
 bounds with two generators that disagree by one, with the Subscription grid reading the shorter;
@@ -1297,9 +1304,10 @@ September.** Its comparison is the previous quarter: the column's own opening, 3
 balance "three months before it", which the source computes with `setMonth(getMonth() - 3)`
 (`useArrTableSummary.js:492-498`). `setMonth` keeps the day of the month, so 31 December less three
 months is 31 September, which rolls over to 1 October — in Colombo and in UTC. (In California the
-source's UTC-to-local shift happens to land it on 30 September.) Reproduced on the civil date, so the
-port asks `POST /arr-summary` for the range the old app asks for where the Build is reconciled, and
-the leftmost y/y figure agrees with it. It is the only case the rule meets: the leftmost Quarterly
+source's UTC-to-local shift happens to land it on 30 September.) Reproduced on the CIVIL date: the
+source's calendar arithmetic without its time-zone effect, the reading §7 applies to the Annual and
+Monthly comparisons too. That is the range the old app asks `POST /arr-summary` for in Colombo and in
+UTC, so the leftmost y/y figure agrees with it there. It is the only case the rule meets: the leftmost Quarterly
 column always opens on 31 December. After the parallel period the opening is the previous
 quarter-end, 30 September.
 
