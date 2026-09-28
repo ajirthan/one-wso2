@@ -47,6 +47,7 @@ import type {
   RegionExitResponse,
 } from "@features/finance/mis/components/exitArrRows";
 import type { RegionMetricsResponse } from "@features/finance/mis/components/regionMetricsRows";
+import { customerLeadColumns } from "@features/finance/mis/components/customerAccountRows";
 import type { DrillDownState } from "@features/finance/mis/api/useDrillDownCustomers";
 
 // The first real figures on screen. Everything below the shell: the Build's
@@ -1558,17 +1559,19 @@ describe("opening the opportunities behind an account", () => {
     });
 
   /**
-   * Northwind's first figure under one Period, found the way a screen reader
-   * finds it: by the cell's `headers` naming that Period's column header.
+   * Northwind's first cell under a column header, found the way a screen reader
+   * finds it: by the cell's `headers` naming that header. Under a Period that is
+   * the first figure; under an identity column, the one fact.
    */
-  const northwindFigureUnder = (periodLabel: string) => {
-    const period = screen.getByRole("columnheader", { name: periodLabel });
+  const northwindCellUnder = (header: string) => {
+    const { id } = screen.getByRole("columnheader", { name: header });
     const row = screen.getByText("Northwind Bank").closest("tr")!;
-    const cell = within(row)
+    return within(row)
       .getAllByRole("cell")
-      .find((one) => one.getAttribute("headers")?.split(" ").includes(period.id))!;
-    return within(cell).getByRole("button");
+      .find((one) => one.getAttribute("headers")?.split(" ").includes(id))!;
   };
+  const northwindFigureUnder = (periodLabel: string) =>
+    within(northwindCellUnder(periodLabel)).getByRole("button");
 
   // §10.22a. Two Periods on screen, and each clicked in turn, because with one
   // column "that column's date" and "a column's date" are the same claim — a
@@ -1620,6 +1623,33 @@ describe("opening the opportunities behind an account", () => {
       .find((row) => row.textContent?.trim().startsWith("Total"))!;
     expect(total).toBeDefined();
     expect(within(total).queryAllByRole("button")).toHaveLength(0);
+  });
+
+  // §10.22b, its other half. Only a figure cell belongs to a Period, so only a
+  // figure cell has a date to ask about. The source opens on ANY cell, identity
+  // columns included, then scrapes a date back out of the column header it
+  // printed (`DataGrid.js:604-626`) — so a click on an Account Owner asks about
+  // a date that was never in the cell. Every identity cell is CLICKED, rather
+  // than searched for a button, so a handler hung on the row is caught as well
+  // as one on the cell.
+  it("does not open anything from an identity cell", async () => {
+    renderPage("?table=customers");
+    // The name heads the row; every other identity column is a fact about it,
+    // under its own header. Read off the table's own list, so a column added to
+    // it is clicked here too.
+    const [, ...facts] = customerLeadColumns("Total ARR");
+    const identityCells = [
+      screen.getByRole("rowheader", { name: /Northwind Bank/ }),
+      ...facts.map((column) => northwindCellUnder(column.label)),
+    ];
+    // Proof these are the cells meant, not seventeen misses.
+    expect(northwindCellUnder("Account ID")).toHaveTextContent(NORTHWIND.id);
+    expect(identityCells.every(Boolean)).toBe(true);
+
+    for (const cell of identityCells) await userEvent.click(cell);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(opportunities.asked).toBeNull();
   });
 
   // Nothing is asked until something is opened. The dialog being shut is the
