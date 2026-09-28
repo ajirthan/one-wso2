@@ -26,7 +26,7 @@
 // set is serialised into the query string under the contract ticket 02 pinned;
 // this one is component state and reaches no address, exactly as in the source.
 // A shared ARR Analysis link therefore opens on defaults. That is reproduced
-// under ADR 0003 rather than fixed here: extending the URL contract is a
+// for parity rather than fixed here: extending the URL contract is a
 // contract decision — what an unrecognised value degrades to, what a stale link
 // means — and not a side effect of porting a table. It is recorded as an open
 // question in spec §11, beside the identical one already standing for the
@@ -34,7 +34,7 @@
 //
 // ---- on the two words that look interchangeable and are not -----------------
 //
-// **Business Unit** is the product line a figure is attributed to (CONTEXT.md),
+// **Business Unit** is the product line a figure is attributed to,
 // and it is what the Business Units control selects. **Products in use** is how
 // many distinct products an account actually runs, which is a property of the
 // ACCOUNT rather than of the figure — the backend sends it as `productsInUse`
@@ -233,7 +233,7 @@ export interface AnalysisFilterTag {
  * is always offered with nothing to clear. A count that cannot reach zero
  * cannot answer the one question it is on the page to answer.
  *
- * (The port's chip reads "3 filters". CONTEXT.md bans "active filter", and
+ * (The port's chip reads "3 filters". "Active" would be a second name for Applied, and
  * "Applied" is no better here — it is defined as a filter serialised into the
  * query string, and nothing on this screen is. See MisAnalysisFilters.)
  *

@@ -18,7 +18,7 @@
 // goes with it.
 //
 // Pacific Time is canonical for Finance MIS — not the viewer's zone and not UTC
-// (CONTEXT.md, spec §3). A Period boundary is a business fact: the year a figure
+// (spec §3). A Period boundary is a business fact: the year a figure
 // lands in is decided in California, and a reader in Colombo has to be shown the
 // same one.
 //

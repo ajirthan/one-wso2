@@ -13,7 +13,7 @@ divergence is recorded in §8.
 module is `src/features/finance/mis/`. One backend URL, `ONE_WSO2_MIS_ARR_BACKEND_URL`.
 
 > **Scope amended 2026-09-24: the Flash Dashboard is not ported.** It stays in the MIS app
-> ([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). One WSO2's Finance MIS is the three
+> (§1, decision 5). One WSO2's Finance MIS is the three
 > Builds and ARR Analysis, on MIS's ARR service alone. The Flash sections below are kept as the record
 > of the source's behaviour, each marked **Not ported**; the code tickets 15, 16 and 18 built for it
 > was removed.
@@ -32,24 +32,24 @@ finance — has no home to split *into*: the vision doc's Leadership view is unn
 Leadership ships, surfacing ARR into it is additive; fragmenting MIS now is not. The cost is
 acknowledged: the Finance rail will carry "company ARR" next to "file a claim".
 
-The backends are not touched — see [ADR 0001](../adr/0001-mis-backends-untouched.md). The port
-re-thinks the IA narrowly rather than transcribing — see
-[ADR 0002](../adr/0002-rethink-ia-rather-than-transcribe.md). Behaviour that looks wrong is kept while
-both apps run — see [ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md).
+The backends are not touched (decision 1). The port re-thinks the IA narrowly rather than
+transcribing (decision 2). Behaviour that looks wrong is kept while both apps run (decision 3, the
+parallel-period rule). All five decisions are set out at the end of §1, under "Decisions this port
+rests on", and cited by number or by name everywhere else.
 
 ---
 
 ## 1. Purpose and users
 
-WSO2's internal finance reporting app. It shows recurring revenue moving from an opening balance to a
-closing balance over a Period, breaks current ARR down by partner model, region, industry and
-customer lifetime; the source also hosts the Flash P&L, which is not ported (ADR 0005). All amounts are USD. Pacific Time is the canonical
-business timezone for every Period boundary.
+WSO2's internal finance reporting app. It shows recurring revenue moving from an opening balance to
+a closing balance over a Period, breaks current ARR down by partner model, region, industry and
+customer lifetime; the source also hosts the Flash P&L, which is not ported (decision 5, below). All
+amounts are USD. Pacific Time is the canonical business timezone for every Period boundary.
 
 | Who | What they see |
 |---|---|
 | ARR privilege (`987` from the ARR backend) | ARR Build, QRR Build, MRR Build, and ARR Analysis when its flag is on |
-| Flash privilege (`789` from the ARR backend) | Nothing here — the Flash stays in the MIS app (ADR 0005) |
+| Flash privilege (`789` from the ARR backend) | Nothing here — the Flash stays in the MIS app (decision 5, below) |
 | Both | The four revenue screens |
 | Signed in, neither privilege | No MIS entries in the Finance rail, no MIS overview card, and a direct URL renders the module's not-authorized state |
 | Not signed in | `AuthGuard` redirects to Asgardeo before any MIS code runs |
@@ -58,6 +58,82 @@ business timezone for every Period boundary.
 is also `987` and means "every authenticated user". The two numbers come from different `/user-info`
 endpoints and must never be read from the same array. `useMisGate` calls the ARR backend itself,
 following `useMarketingOpsGate`, and carries the fail-closed `RESTRICTED_IDS` idiom.
+
+### Decisions this port rests on
+
+Five decisions shape everything below, and the rest of this document cites them as "decision N
+(§1)" or by the rule's name. Each is stated with the reasoning other sections lean on.
+
+1. **The MIS backends are not changed; One WSO2 calls them as they are.** The port replaces the
+   frontend only. The three Ballerina services (`app_mis_arr`, `app_mis_flash`, `app_mis_admin`)
+   keep their own numeric privilege scheme resolved from LDAP groups, their own `x-jwt-assertion`
+   interceptors and their own WSO2 email-domain check. The old and new frontends run side by side for
+   one full reporting cycle, so a figure that disagrees between them has to be attributable to the
+   frontend alone; changing a backend in the same change would make a discrepancy impossible to pin
+   down. It follows that MIS authorization cannot use One WSO2 capabilities and needs a gate of its
+   own, `useMisGate` above.
+2. **The IA is re-thought narrowly rather than transcribed.** Every app ported into One WSO2 so far
+   was re-placed or consolidated rather than copied, and MIS carries inconsistencies worth not
+   importing — an "ARR Dashboard" that is three screens next to a "Flash Dashboard" that is one. But
+   MIS users are not filling in a form: they navigate by muscle memory, know figures by position, and
+   hold bookmarked URLs carrying serialised filter state. So the re-think is kept narrow, argued in
+   this document and signed off by a named finance stakeholder before code lands (§11.7), rather than
+   decided screen by screen during implementation. A faithful re-skin was rejected for importing
+   MIS's naming inconsistencies; a full redesign for destroying the screen-for-screen mapping that
+   verifying number parity during the parallel period needs.
+3. **The parallel-period rule: behaviour that looks wrong is reproduced while both apps run.** The
+   old MIS frontend and the port run side by side for one full reporting cycle, the parallel period,
+   and finance signs off figures from both. Until it ends the port reproduces the source's
+   behaviour even where it looks like a defect, because a "fix" makes the two apps disagree and
+   every disagreement has to be investigated as a possible port error before anyone can trust the
+   numbers. Each such case is recorded in §8, so the list is a known backlog rather than a mystery.
+   Fixes land after the old frontend goes dark.
+4. **The Build tables are hand-rolled on `Table`, not a data grid.** The community
+   `@mui/x-data-grid` this app ships through Oxygen cannot express the Build: `pageSize` above 100
+   throws, column pinning is absent (`GridPinnedRows` returns `null`), and row grouping, tree data
+   and aggregation are not in the package at all. A three-variant prototype
+   (`/finance/mis-prototype`) confirmed that a plain `<Table>` carries the four capabilities the
+   Build needs at once — a sticky first column, a sticky two-row grouped header, three-level
+   collapsible row sections, and horizontal scroll at 24 columns — with no new dependency and no
+   licence. MUI X Pro would deliver pinning, tree data and aggregation in one component and was
+   rejected on procurement cost, not on merit. Row windowing was named as the item most likely to
+   reopen that; ticket 07 built it, found it no harder than expected, and left only its performance
+   at real volume open (§10.22). The one exception is ARR Analysis's flat account table, which takes
+   the DataGrid per the policy in `LeaveReportsPage.tsx:313-317`. Hand-rolling commits the port to
+   this scope, as requirements rather than caveats:
+   - **Row windowing**, since there is no virtualization. `BuildTable` windows above 150 rows
+     (`ROW_WINDOW_THRESHOLD`, §9). `react-window`, already a dependency, cannot do it:
+     `createListComponent` gives every item `{ position: 'absolute', top, height, width: '100%' }`
+     (`react-window@1.8.11`, `dist/index.esm.js:1099-1106`), which takes a `<tr>` out of the table
+     formatting context, and the column sizing, the sticky column and the sticky header go with it.
+   - **An Excel export**, because a hand-rolled table gets no CSV and Finance's workflow is to paste
+     the grid into a spreadsheet (§7, "Excel").
+   - **The measured two-row sticky header.** MUI's `stickyHeader` is single-row only — every header
+     cell gets `top: 0` (`@mui/material` 7.3.4, `TableCell.js:145-151`) — so the second row's offset
+     is measured at runtime, or the sub-header covers the Period labels. It is the mechanism with no
+     precedent, in MUI or in this repo; a third header row would generalise it, and was not taken
+     (§7). The same header costs two more: `stickyHeader` forces `borderCollapse: separate`, so
+     every border is placed per cell, and the two rows need explicit `id`/`headers` wiring so a
+     screen reader can say which Period a figure belongs to.
+   - **The frozen identity pane.** The sticky row-label column, widened in ticket 10 to a run of
+     identity columns frozen contiguously from the left. Row hover and selection are painted per
+     cell, because a `<tr>` tint stops at the pinned cell's opaque background.
+   - **Hand-computed totals**, since the grid cannot aggregate — owed by the summary tables, not by
+     the Subscription Build, whose totals arrive on the response (§9).
+5. **The Flash Dashboard stays in the MIS app.** The Flash P&L, its forecasts, its comments and its
+   Excel export are not ported; One WSO2's Finance MIS is the ARR, QRR and MRR Builds and ARR
+   Analysis. Decided by the port's owner on 2026-09-24, as a scope decision rather than a technical
+   finding, after tickets 15, 16 and 18 had built the P&L, forecast editing and export. That code
+   was removed rather than left unreachable, and remains in history from
+   `feat(mis): the Flash P&L read view` up to the commit before
+   `feat(mis): keep the Flash Dashboard in the MIS app` — named by subject, because a rebase
+   rewrites hashes and the subjects survive it. So One WSO2 is configured for one MIS backend, the
+   ARR service; of the two privilege numbers `/user-info` returns it reads only `987`, so `789`
+   opens nothing here and a Flash-only holder sees no MIS entry and keeps using the MIS app; the MIS
+   app cannot be retired while the Flash lives in it, so the parallel period ends for the revenue
+   screens only; and ticket 17 (Flash comments) is won't-fix, with ticket 04 moot. One piece of the
+   Flash work stayed: the Build's export writes percentages as true Excel percentages (§7). The
+   Flash sections below remain as the record of the source's behaviour, each marked **Not ported**.
 
 ## 2. Screens
 
@@ -80,7 +156,7 @@ difference that matters is *when each takes effect*, because they are not all th
 
 | Group | Controls | When it takes effect |
 |---|---|---|
-| Period control | Annually, TTM — the Window, which reaches the reader as a Period option, not a control of its own (CONTEXT.md). Quarterly and Monthly are their own routes. | at once — it is a different cut |
+| Period control | Annually, TTM — the Window, which reaches the reader as a Period option, not a control of its own: "Window" is the column cut `?window=ttm` carries, and no piece of UI is called that. Quarterly and Monthly are their own routes. | at once — it is a different cut |
 | Unit | BU / Software / Cloud / Custom, and the unit within it; Custom unlocks two mutually exclusive lists | at once — it is a different report |
 | Filters | View, the region list that View uses, Type, Channel/Direct, Forecast Type, Ending Month, the six account and geography lists, Country by Sales Region, Years Back, YTD, Cumulative | on **Apply** |
 | Scale | units / thousands | at once, and remembered across screens (§4) |
@@ -158,8 +234,8 @@ the house convention: the partner-model split, and ARR by industry.
 > partner-model `PieChart` (`:1863`) and the `ARR by Industry` `BarChart` (`:2034`), and Sales Region
 > appears only as a filter — and neither of the two is drawn the way the sentence assumed. Ticket 14
 > built the two that exist and the region bars are dropped: a new chart during the parallel period is
-> one Finance cannot reconcile against the running app, and it is ADR 0002's kind of decision rather
-> than a port's. §7 has the two form changes.
+> one Finance cannot reconcile against the running app, and it is the kind of re-think that
+> decision 2 (§1) reserves for argument and sign-off, not a port's to take. §7 has the two form changes.
 
 | Chart | Form | Colour |
 |---|---|---|
@@ -218,9 +294,8 @@ hard-codes the answer to `0` (§9).
 
 ### 2.5 Flash Dashboard — not ported
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 
 The monthly P&L flash: Revenue, Cost of Sales with sub-levels, Gross Profit, Gross Margin, and ARR and
@@ -232,16 +307,17 @@ Booking per business unit. **The only screen in MIS that writes.** Two write pat
   config still points at it. Either comments are already broken in production, or they have moved and
   the config is stale. Porting a feature against a dead backend would be the most expensive possible
   way to discover which.
-- **Forecasts** (the tickets' "budget and forecast values" — one value, `CONTEXT.md`) — against the
-  flash backend, rejected server-side after the monthly cutoff (§3). **Not inline on the P&L**,
-  whatever this line said before ticket 16: a figure is a sum of GL accounts, and the only write the
-  backend has is a forecast against ONE account, by its id (`PATCH` with `{id, value, comment}`). So,
-  as in the source, a figure in a business unit's monthly view opens the **Account View** — the GL
-  accounts behind it for that unit and month — and each account there has an Edit button opening a
-  Value + Comment form. The figures that open one are
-  Revenue's Recurring, Non-Recurring/PSO and Cloud lines, and Cost of Sales' sub-categories under
-  Recurring, Non-Recurring/PSO and Public Cloud; never the WSO2 column. Edit is offered on the account
-  views of one month only — see §3. Built as `MisFlashAccountsDialog` (ticket 16).
+- **Forecasts** (the tickets' "budget and forecast values" — one value, not two: the backend reads
+  it back as `budgetedValue` and takes it as `value`, and the source heads its column "Updated
+  Amount") — against the flash backend, rejected server-side after the monthly cutoff (§3). **Not
+  inline on the P&L**, whatever this line said before ticket 16: a figure is a sum of GL accounts,
+  and the only write the backend has is a forecast against ONE account, by its id (`PATCH` with
+  `{id, value, comment}`). So, as in the source, a figure in a business unit's monthly view opens
+  the **Account View** — the GL accounts behind it for that unit and month — and each account there
+  has an Edit button opening a Value + Comment form. The figures that open one are Revenue's
+  Recurring, Non-Recurring/PSO and Cloud lines, and Cost of Sales' sub-categories under Recurring,
+  Non-Recurring/PSO and Public Cloud; never the WSO2 column. Edit is offered on the account views of
+  one month only — see §3. Built as `MisFlashAccountsDialog` (ticket 16).
 
 Excel export is a hand-built ExcelJS workbook, ported as pure functions (§7). The source's Export
 menu is kept whole: **Full Report** (an Annual Summary sheet plus one monthly sheet per business
@@ -250,10 +326,10 @@ unit's sheet. Built in ticket 18, on ticket 11's builders — §7, "The Flash's 
 
 ## 3. Business rules
 
-**The monthly editing cutoff.** Forecast edits — the tickets' "budget and forecast", which is one value
-(`CONTEXT.md`) — are refused after the **15th of the month**.
-The frontend does not pre-empt the cutoff; it surfaces the rejection. Port that behaviour exactly — a
-client-side guess at the date would disagree with the server the moment its rule changes.
+**The monthly editing cutoff.** Forecast edits — the tickets' "budget and forecast", which is one
+value, not two (§2.5) — are refused after the **15th of the month**. The frontend does not pre-empt
+the cutoff; it surfaces the rejection. Port that behaviour exactly — a client-side guess at the date
+would disagree with the server the moment its rule changes.
 
 > **Corrected by ticket 16.** This said the cutoff was the flash backend's `dateCutoff`, configurable.
 > That variable is declared (`flash-backend/modules/compute/utils.bal:10`) and **never read**. The
@@ -351,9 +427,9 @@ renders as the sender saw it without permanently changing the recipient's prefer
 | Both | Yes | Yes, when the flag is on | Yes | Yes, before the cutoff |
 | Neither | Not in the rail; direct URL shows not-authorized | Same | Same | — |
 
-The two Flash columns describe the MIS app: One WSO2 has neither screen (ADR 0005), so the Flash
-privilege opens nothing here. The real LDAP groups behind `987` and `789` are `configurable` values in
-the ARR backend and are not in either repo — see §11.
+The two Flash columns describe the MIS app: One WSO2 has neither screen (§1, decision 5), so the
+Flash privilege opens nothing here. The real LDAP groups behind `987` and `789` are `configurable`
+values in the ARR backend and are not in either repo — see §11.
 
 ## 6. API contract
 
@@ -379,10 +455,10 @@ key construction: the key must include the serialised body, not just the URL.
 | `GET`, `PATCH /cost-of-sales-accounts` | Flash | Cost-of-sales budget/forecast. **Write.** The GET also REQUIRES `accountSubCategory`, which the source does not send — §7, §11.18. Every failure the service itself reports on either PATCH, the cutoff's included, arrives as a bare 500 with no body; a body that does not bind is a 400 and a bad token a 401, both before the service runs. |
 | `GET /comments/all`, `GET`/`POST`/`PATCH`/`DELETE /comments` | Admin | Flash comments. **Write.** ⚠ The Admin component is named "DEPRECATED" and its Production deployment is **suspended** — see §2.5. |
 
-The Flash and Admin rows describe the MIS app's contract: One WSO2 calls the ARR service alone
-(ADR 0005), so only `isMisArrConfigured()` exists here. While the Flash was being ported each service
-had its own `isMis…Configured()` check, so an unset Admin URL (deprecated, suspended in Production,
-§2.5) could not take the ARR screens down.
+The Flash and Admin rows describe the MIS app's contract: One WSO2 calls the ARR service alone (§1,
+decision 5), so only `isMisArrConfigured()` exists here. While the Flash was being ported each
+service had its own `isMis…Configured()` check, so an unset Admin URL (deprecated, suspended in
+Production, §2.5) could not take the ARR screens down.
 
 Base URLs differ by environment in both host *and* path — `apis.wso2.com/.../v1` in production,
 `apis-stg.wso2.com/.../v1.0` in staging — so the version segment is part of the configured URL rather
@@ -405,18 +481,17 @@ module-level mutable token globals, the fetch wrapper and its 401 refresh queue,
 timer, the sidebar and nav rail, the banner system, the Redux store, and all three nested
 `BrowserRouter`s. One WSO2 already provides every one of these.
 
-**Tables.** ag-Grid and MUI X DataGrid are both dropped. The community DataGrid this app ships cannot
-express the Build: `pageSize > 100` throws, column pinning is absent, `GridPinnedRows` returns `null`,
-and row grouping, tree data and aggregation are not in the package at all. Rather than add a
-dependency — which `AttendeeGrid.tsx:46-64` records this codebase deciding against once already — the
-Build tables are hand-rolled on `Table`, following the existing precedents for sticky first
-columns, three-level collapsible sections, hand-computed totals and horizontal overflow. ARR
+**Tables.** ag-Grid and MUI X DataGrid are both dropped. The community DataGrid this app ships
+cannot express the Build: `pageSize > 100` throws, column pinning is absent, `GridPinnedRows`
+returns `null`, and row grouping, tree data and aggregation are not in the package at all. Rather
+than add a dependency — which `AttendeeGrid.tsx:46-64` records this codebase deciding against once
+already — the Build tables are hand-rolled on `Table`, following the existing precedents for sticky
+first columns, three-level collapsible sections, hand-computed totals and horizontal overflow. ARR
 Analysis's flat account table does take the DataGrid. A three-variant prototype confirmed this is
-achievable — see [ADR 0004](../adr/0004-arr-build-tables-are-hand-rolled.md), which also records the
-two things it obliges: **row windowing must be written** (there is no virtualization, and the real
-Build is thousands of rows) and **an export path must be built** (a hand-rolled table gets no CSV,
-and Finance's workflow is to paste the grid into a spreadsheet). Both are in scope for this port, not
-deferrable.
+achievable — see decision 4 (§1), which also records the two things it obliges: **row windowing must
+be written** (there is no virtualization, and the real Build is thousands of rows) and **an export
+path must be built** (a hand-rolled table gets no CSV, and Finance's workflow is to paste the grid
+into a spreadsheet). Both are in scope for this port, not deferrable.
 
 **Charts.** `@mui/x-charts` is dropped for recharts, per the one existing chart implementation.
 
@@ -452,7 +527,7 @@ than transcription, the last of them made in ticket 18:
   `0.00%`, which shows as "98.25%" and stays right under a formula that multiplies by the cell;
   ticket 11 had written the bare 98.25 under money's format. Ticket 18 set the rule, in
   `misBuildSheet`'s `figureCell`, keyed on the kind of number, and it is the one part of that
-  ticket the port keeps (ADR 0005). `MIS_NUMBER_FORMATS.PERCENTAGE` says why.
+  ticket the port keeps (§1, decision 5). `MIS_NUMBER_FORMATS.PERCENTAGE` says why.
 
 The customer drill-down is a consumer of these same builders. The source's dialog has its own Export
 CSV button; porting that as a second, bespoke CSV path is what ticket 11 exists to prevent, so the
@@ -460,12 +535,12 @@ dialog writes a workbook through `misDrillDownSheet` — a `misBuildSheet` with 
 same degenerate case `BuildTable` already renders it in.
 
 Three of the decisions above change what the source does — **the filename's date, a figure's cell
-type, and the drill-down's CSV becoming an .xlsx** — and all three are **knowing exceptions to
-[ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md), not cases the ADR fails to
-reach.** (The other two, always exporting at units and writing percentages as Excel's own, deviate
-from nothing: the source has no Build export at all.)
+type, and the drill-down's CSV becoming an .xlsx** — and all three are **knowing exceptions to the
+parallel-period rule (§1, decision 3), not cases the rule fails to reach.** (The other two, always
+exporting at units and writing percentages as Excel's own, deviate from nothing: the source has no
+Build export at all.)
 
-They are taken because none of them reaches what that ADR protects. ADR 0003 exists so that finance
+They are taken because none of them reaches what that rule protects. The rule exists so that finance
 signing off figures from both apps never has to investigate a disagreement, and §10.37 compares the
 FIGURES ON EACH SCREEN. A filename, a cell's type and a file's extension are all outside that, and
 the figures inside the exported sheet are the same numbers the screen is showing — so the parallel
@@ -473,7 +548,7 @@ period sees no disagreement it has to explain. Each is also a defect that would 
 preserved in a file outliving the parallel period: an export filed under tomorrow's date, and a
 column of figures that cannot be summed.
 
-*Not ported — ADR 0005.* **The Flash's two dialogs become one, and the P&L's own rows (ticket 15).** The source reaches its
+*Not ported — decision 5 (§1).* **The Flash's two dialogs become one, and the P&L's own rows (ticket 15).** The source reaches its
 sub-levels through a separate `MultiLevelViewDialog` opened from the Cost of Sales and Expense
 headings, and reaches a business unit's monthly view through `MonthlyViewDialog` on each column
 header — and the monthly view it opens depends on which of the two you came from, because the first
@@ -483,7 +558,7 @@ question (`isSubLevel: true`, which is purely additive at the backend —
 `balance_statement.bal:312-325` attaches `subLevel` to the Cost of Sales and Expense lines and
 changes nothing else).
 
-*Not ported — ADR 0005.* **Gross Margin renders `77.50` where the source renders `78 %` (ticket 15).** `DataTable.js:83-88`
+*Not ported — decision 5 (§1).* **Gross Margin renders `77.50` where the source renders `78 %` (ticket 15).** `DataTable.js:83-88`
 does `` `${Math.round(params.value)} %` ``. The port routes every percentage through ticket 05's
 `formatMisValue`, which gives two decimals and no unit marker — the same as the Build's own retention
 rows, so this is a port-wide convention rather than a Flash decision. More precision than the source,
@@ -492,13 +567,13 @@ knowing for §10.37 because a reconciler diffing the two screens sees both a dif
 different string on those rows; adding the marker would mean changing the shared formatter and every
 Build percentage with it, which is a decision for after the parallel period.
 
-*Not ported — ADR 0005.* **The Flash's month pickers are native inputs (ticket 15).** The source uses
+*Not ported — decision 5 (§1).* **The Flash's month pickers are native inputs (ticket 15).** The source uses
 `@mui/x-date-pickers`, which this repo does not ship; `<input type="month">` is the browser's own
 picker, holds `yyyy-MM`, and never puts a month through a `Date` — which is most of §3's rule on this
 screen. Same reasoning as the ag-Grid and DataGrid decisions above: a dependency is not added for one
 control.
 
-*Not ported — ADR 0005.* **The Flash shares the Scale preference rather than defaulting to thousands (ticket 15).**
+*Not ported — decision 5 (§1).* **The Flash shares the Scale preference rather than defaulting to thousands (ticket 15).**
 `TableView.js` opens this one screen at `useState(true)` — thousands — where every other MIS screen
 opens at units. The port carries the one cross-screen `ScalePreferenceContext` §4 settled, so
 switching to the Flash does not switch units under the reader. The caption beside the table says
@@ -532,17 +607,17 @@ viewer east of California every annual column opens and closes a day early — `
 column is 2026's. The port does the arithmetic on the three numbers instead, and the boundaries stop
 depending on where the reader is sitting (§10.8).
 
-**This is a knowing exception to [ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md),
-not a case the ADR fails to reach.** The team reconciling the two apps is in Colombo, so this is not a
-difference confined to some hypothetical remote viewer: through the whole parallel period the old
-frontend and the port will disagree about every Annually boundary, for exactly the people signing off
-the figures. It is taken anyway, because §3 settled it before the ADR could apply — "Every Period
-boundary, and the Period label itself, is computed in `America/Los_Angeles`, not the viewer's zone and
-not UTC" — and §10.8 states it as a test rather than a preference. The source's behaviour here is not
-a business rule anyone agreed to; it is a bug that makes one saved link report different revenue to
-two people. Reproducing it would mean shipping a port that fails its own spec's test suite.
-**§10.37's parity check must expect this difference** and reconcile against Pacific-dated ranges
-rather than against whatever the old frontend happens to render in Colombo.
+**This is a knowing exception to the parallel-period rule (§1, decision 3), not a case the rule
+fails to reach.** The team reconciling the two apps is in Colombo, so this is not a difference
+confined to some hypothetical remote viewer: through the whole parallel period the old frontend and
+the port will disagree about every Annually boundary, for exactly the people signing off the
+figures. It is taken anyway, because §3 settled it before the rule could apply — "Every Period
+boundary, and the Period label itself, is computed in `America/Los_Angeles`, not the viewer's zone
+and not UTC" — and §10.8 states it as a test rather than a preference. The source's behaviour here
+is not a business rule anyone agreed to; it is a bug that makes one saved link report different
+revenue to two people. Reproducing it would mean shipping a port that fails its own spec's test
+suite. **§10.37's parity check must expect this difference** and reconcile against Pacific-dated
+ranges rather than against whatever the old frontend happens to render in Colombo.
 
 The same correction reaches one more date, and it is worth naming because it is not a Period boundary.
 The leftmost Build column has no column to its left, so its y/y rows are compared against **the same
@@ -605,8 +680,8 @@ Dropping it changes no behaviour; keeping it would.
 **The Software/Cloud Customers table loses the source's Software/Cloud header row.** The source heads
 that table with THREE rows — the Period, then a `Software` group spanning four columns and a `Cloud`
 group spanning seven, then the product — and `BuildTable` renders two. Adding a third generalises the
-measured sticky offset that [ADR 0004](../adr/0004-arr-build-tables-are-hand-rolled.md) records as the
-mechanism with no MUI precedent, so it was taken as its own decision and not folded into ticket 10.
+measured sticky offset that decision 4 (§1) records as the mechanism with no MUI precedent, so it
+was taken as its own decision and not folded into ticket 10.
 The grouping therefore lives in the labels: the three columns the source can afford to label plainly
 `Total` are **Software Total**, **Cloud Total** and **Total** here. Everything else keeps the source's
 wording, which already names its own half of the book. No figure changes; only the header does.
@@ -853,11 +928,11 @@ port asks one function, `unavailableFilters`, in both places: the bar greys the 
 `hydrateAppliedFilters` drops the value. Same arrangement as `allowedTypeValues`, and for the same
 reason — a menu and a link that answer separately drift.
 
-**Why this one is taken despite ADR 0003.** It is the rare deviation that CHANGES a figure: the two
-apps show different numbers for such a link, which is exactly what §10.37's parity check is for. It is
-taken anyway because no such link can be produced by either app's own UI — the source's bar clears
-these filters on every Table switch, so only a hand-edited address reaches the state, and a
-hand-edited address is not what Finance is reconciling.
+**Why this one is taken despite the parallel-period rule (§1).** It is the rare deviation that
+CHANGES a figure: the two apps show different numbers for such a link, which is exactly what
+§10.37's parity check is for. It is taken anyway because no such link can be produced by either
+app's own UI — the source's bar clears these filters on every Table switch, so only a hand-edited
+address reaches the state, and a hand-edited address is not what Finance is reconciling.
 
 **A region list outside its own View is dropped on hydration too.** The same hole reached by another
 route: the filter bar's `normalisePending` has always cleared a Sales Region list on a Sub Region view
@@ -919,9 +994,10 @@ so a menu never narrows to the one value the reader just picked and traps them t
 is the source's own `mergeUniqueOptions` behaviour, and it is the reason the Country menu is usable at
 all despite the typo.
 
-Fixing the key is not an ADR 0003 breach. That ADR protects behaviour someone chose and Finance
-reconciles against; a menu built from a key the response has never carried is a typo, its effect is a
-menu missing options rather than a figure reading differently, and no figure moves either way.
+Fixing the key is not a breach of the parallel-period rule (§1). That rule protects behaviour someone
+chose and Finance reconciles against; a menu built from a key the response has never carried is a
+typo, its effect is a menu missing options rather than a figure reading differently, and no figure
+moves either way.
 
 **It also answers §8.5.** That entry asks whether the `billingCountries` list the backend sends was
 ever meant to be used. It was: ARR Analysis's Country control SENDS `billingCountries`, so that list
@@ -931,7 +1007,8 @@ longer discarded on the way past. `misFilterOptions` now shapes both.
 
 **Lifetime sorts as a number.** `customerLifetime` is `string` on the wire and the source leaves the
 column at the grid's default string type, so its Lifetime sorts lexicographically and "10 yrs" lands
-above "2 yrs". A sort order is not a figure Finance reconciles, so ADR 0003 does not reach it.
+above "2 yrs". A sort order is not a figure Finance reconciles, so the parallel-period rule does not
+reach it.
 
 **The count of narrowings can reach zero.** The source pushes a `Partner Type` tag unconditionally
 and an `As of Date` tag whenever a date is set — which it is by default — so a screen narrowing
@@ -939,10 +1016,11 @@ nothing reads "2 active" and offers "Clear all" with nothing to clear. A count t
 cannot answer the one question it is on the page for. Here a tag appears only for a control away from
 its default, so the count IS the number of narrowings.
 
-The chip also reads `3 filters` rather than the source's `3 active`. CONTEXT.md bans "active filter",
-and **Applied filter** is no better on this screen — that term is defined as a filter serialised into
-the query string, and nothing here is. Neither contested word fits, so the chip counts and says
-nothing else.
+The chip also reads `3 filters` rather than the source's `3 active`. The port avoids "active filter"
+everywhere, because it does not say whether a filter has been committed or is still being edited —
+the distinction the port's own term, **Applied filter**, exists to draw. And **Applied filter** is no
+better on this screen — that term means a filter committed and therefore serialised into the query
+string, and nothing here is. Neither contested word fits, so the chip counts and says nothing else.
 
 **Its CSV carries figures a spreadsheet reads as numbers.** This is §10.18's criterion, met at the
 same standard ticket 11 set for the workbook, and it took more than declining to add a formatter. The
@@ -970,7 +1048,7 @@ Two smaller consequences of the above, recorded so they are not discovered durin
 **Product chips are Oxygen's outlined chips rather than the source's per-product colours.** The
 source assigns each product a colour (`PRODUCT_STYLES`) used in both the chips and the charts. Not
 carried: the colour vocabulary is ticket 14's to establish against the Oxygen theme, in light and
-dark, and inventing a second one here would leave two to reconcile. ADR 0002.
+dark, and inventing a second one here would leave two to reconcile. Decision 2 (§1).
 
 ### ARR Analysis, the charts (ticket 14)
 
@@ -1048,12 +1126,14 @@ by its rows (`ArrAnalysisDashboard.js:878-882`) and so does this.
 
 **What is ON a chart is never scaled; what is in its table always is.** The axis ticks and the
 tooltips go through `misHeadlineAmount` — compact, in dollars, no Scale — because everything on a
-chart is a **Headline** (CONTEXT.md), and the source states the same rule for cards and charts
-together. The companion table below each chart goes through `formatMisValue` at the reader's Scale,
-like every other table on the screen. So a chart reading `$1.2M` above a table row reading `1,234.57`
-is the two surfaces doing their own jobs, not a disagreement: the chart is for the shape, the table
-is for the figure. The one thing that would be a defect is a chart disagreeing with ITSELF, which is
-why the tooltip takes the axis's formatter rather than the table's.
+chart is a **Headline**: a single figure read at a glance rather than one cell among many, which is
+never scaled (§7, "A rule the source states and this port makes structural"). The source states the
+same rule for cards and charts together. The companion table below each chart goes through
+`formatMisValue` at the reader's Scale, like every other table on the screen. So a chart reading
+`$1.2M` above a table row reading `1,234.57` is the two surfaces doing their own jobs, not a
+disagreement: the chart is for the shape, the table is for the figure. The one thing that would be a
+defect is a chart disagreeing with ITSELF, which is why the tooltip takes the axis's formatter
+rather than the table's.
 
 **The palette is computed, not chosen.** Both slots are documented steps from the `dataviz`
 reference palette, run through its validator against THIS app's surfaces (`#FFFFFF` and `#141417`
@@ -1092,20 +1172,19 @@ rather than only asserted.
 
 ### Flash budget and forecast editing (ticket 16)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 **Cost of Sales account views ask for the sub-category by the name the backend declares.** The flash
 backend renamed its required parameter `expenseType` → `accountSubCategory` on 2023-11-20
 (`ec5cfa857`, `service.bal:95-96`), and the source's `MonthlyViewTable.js:440-445` still sends
 `expenseType` — so a Ballerina resource missing a required query parameter answers its Cost of Sales
-account view with a 400, and Cost of Sales forecasts have, on the evidence, not been writable from the
-source since. (It also double-encodes: `encodeURI` over a query `URLSearchParams` has already encoded
-turns `Infra/IT`'s `%2F` into `%252F`.) The port sends `accountSubCategory`, encoded once. The two apps
-cannot disagree about a figure because of it — both read the same P&L, which the forecast feeds — so
-ADR 0003 does not reach it; what differs is that one of them can write. **Unverified against a live
-tenant**, §11.18.
+account view with a 400, and Cost of Sales forecasts have, on the evidence, not been writable from
+the source since. (It also double-encodes: `encodeURI` over a query `URLSearchParams` has already
+encoded turns `Infra/IT`'s `%2F` into `%252F`.) The port sends `accountSubCategory`, encoded once.
+The two apps cannot disagree about a figure because of it — both read the same P&L, which the
+forecast feeds — so the parallel-period rule (§1) does not reach it; what differs is that one of
+them can write. **Unverified against a live tenant**, §11.18.
 
 **Expense sub-levels open nothing.** The source opens an account view on the Expense section's
 sub-levels too, against `/cost-of-sales-accounts` with an Expense category — the cost-of-sales table,
@@ -1155,16 +1234,15 @@ sub-category, so two Cost of Sales lines' views were titled alike (`MonthlyViewT
 
 **The account view is in units, whatever the Scale.** The form takes units — the PATCH's `value` is
 dollars — and a list in thousands beside it invites a forecast a thousand times off. The source's
-account view ignores its thousands toggle too. The one MIS grid that does not follow Scale; recorded
-in `CONTEXT.md`.
+account view ignores its thousands toggle too. The one MIS grid that does not follow Scale: a
+Forecast is typed there in units.
 
 ### The Flash's Excel export (ticket 18)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour. The builder extensions below (the
-one-column-per-group sheet, headings, fills, merges, the Export menu) went with it; the percentage
-rule stayed, because the Build's own percentage rows use it.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour. The builder extensions below (the one-column-per-group sheet, headings,
+fills, merges, the Export menu) went with it; the percentage rule stayed, because the Build's own
+percentage rows use it.
 
 All three of the source's exports are kept: its Export menu's **Full Report** and **Annual Report**,
 and the monthly view's **Export**. So is the workbook's shape: an "Annual Summary" sheet, one sheet
@@ -1179,12 +1257,11 @@ additive (a row's `fontSize`, a cell's `fill`, a sheet's `merges`), plus a `head
 across it.
 
 What the file contains is decided differently from the source's, and six things follow. All are
-**knowing exceptions to [ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md)**
-of the kind ticket 11 took: a file's layout and a cell's type, not a figure on a screen. The first
-also moves figures, and Finance "know figures by position", so it is a re-think
-[ADR 0002](../adr/0002-rethink-ia-rather-than-transcribe.md) wants signed off by a named finance
-stakeholder. It is argued here and put to Finance as §11.19. Undoing it is one argument: the column
-order `misFlashAnnualSheet` hands the builder.
+**knowing exceptions to the parallel-period rule (§1, decision 3)** of the kind ticket 11 took: a
+file's layout and a cell's type, not a figure on a screen. The first also moves figures, and Finance
+"know figures by position", so it is a re-think of the kind decision 2 (§1) wants signed off by a
+named finance stakeholder. It is argued here and put to Finance as §11.19. Undoing it is one
+argument: the column order `misFlashAnnualSheet` hands the builder.
 
 - **The rows and the names are the screen's.** Each sheet is built from the tree its screen draws
   (`flashPnlRows`, `flashDetailRows`), with its sections, order and labels. Figures are read through
@@ -1335,12 +1412,45 @@ better than before and is still worth writing down.
 
 **All ARR Metrics writes five of the seven movements differently from the Build.** Its headers are
 `Expansion`, `Reduction`, `Loss`, `First Sale` and `Closing ARR` where the Subscription Build writes
-`Expansions`, `Reductions`, `Lost`, `New` and `Ending ARR` — the source disagreeing with itself across
-two of its own screens. Reproduced rather than harmonised: finance reconciles the two apps column by
-column for a full reporting cycle, and a renamed column is a disagreement somebody has to investigate
-before the figures can be trusted. Two of the five are words [`CONTEXT.md`](../../CONTEXT.md) does not
-use — the glossary's terms are **Lost** and **New** — so harmonising the two screens is a decision for
-after the parallel period rather than a rename in one file. The glossary records the carve-out.
+`Expansions`, `Reductions`, `Lost`, `New` and `Ending ARR` — the source disagreeing with itself
+across two of its own screens. Reproduced rather than harmonised: finance reconciles the two apps
+column by column for a full reporting cycle, and a renamed column is a disagreement somebody has to
+investigate before the figures can be trusted. Two of the five, `Loss` and `First Sale`, are words
+the port otherwise does not use — its terms are **Lost** and **New** — so they are a deliberate
+carve-out rather than slips to fix, and harmonising the two screens is a decision for after the
+parallel period rather than a rename in one file. The carve-out reaches the column KEYS those
+headers derive from as well: `REGION_METRICS_SUB_COLUMNS` names them off the label, so `loss` and
+`first-sale` sit there beside the wire fields `lost` and `firstSale`, and renaming either half would
+only make the column disagree with itself.
+
+**Four more labels say "churn" and "upsell", and are kept verbatim for the same reason.** The port's
+words for those movements are **Lost** and **Expansion**, and it avoids "churn" and "upsell"; the
+source shows its readers these:
+
+- `Total Churn ARR` (Lost) and `% Increases/Upsells Total` (Expansion), two of the Subscription
+  Build's row labels — `arrDashboard/utils/rowHeaders.js:24` and `:33`, with `Ending ARR` (Closing)
+  beside them at `:20`.
+- `Churn Date`, a Software/Cloud Customers column — `arrDashboard/utils/tableUtils.js:849`.
+- `ARR Churn Date`, a customer drill-down column —
+  `arrDashboard/components/ArrSummaryCustomersDialog.js:57`.
+
+The carve-out reaches the names built off those labels too. `MIS_ROW_LABELS`' keys
+`TOTAL_CHURN_ARR`, `PERCENT_INCREASES_UPSELLS_TOTAL` and `ENDING_ARR` each name their own label, so
+the map reads against `rowHeaders.js` line by line (an `EXIT_ARR: "Ending ARR"` could not be checked
+at a glance), and the customers table's column key `churn-date` is named off its label as `loss` is.
+The ARR backend's fields `totalChurnArr`, `percentIncreasesUpsellsTotal` and `churnDate` are wire
+names the port does not own. Everywhere else — prose, identifiers, row ids, every other table — the
+words are **Lost**, **Expansion** and **New**.
+
+**The custom unit selection's second list is called "Product Units", and keeps the name.** What a
+figure is attributed to is its **Business Unit**, and the port does not call that a product. But
+`/app-configs` sends two lists, `businessUnits` (`IAM_BU`) and `productUnits` — one Business Unit's
+software or cloud book (`IAM_CLOUD`, `APIM_SOFTWARE`) — and the source heads them "Business Units"
+and "Product Units" under "Select a combination of either a set of Business Units or Product Units."
+(`arrDashboard/components/TableNavigation.js:356`, `:370` and `:386`; the Region Summary repeats the
+two headings at `RegionSummaryTabs.js:326` and `:341`). A selection takes one list or the other. So
+the word reaches that list and the names built off it — `productUnits`, `customProductUnits`,
+`?customProduct=` — and nothing else.
 
 **The customers table's Total column means two different things depending on the breakdown.** Both
 read `arrGrandTotal` and both fall back when it is absent — to different sums, under different
@@ -1369,9 +1479,8 @@ list on screen from the app Finance is reconciling against.
 
 ### The Flash's date range depends on which picker the reader moved (ticket 15)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 **The date each end of the range sends depends on whether THAT PICKER was moved — decided per
 picker, not per Search.** `FlashConsole.js`'s mount seeds `startMonthFilter` and `endMonthFilter`
@@ -1393,8 +1502,7 @@ So Search on a freshly loaded screen changes nothing, moving one picker converts
 Reset does not restore the view the reader arrived on: it goes back a further month (its two
 `setDate(0)` calls land on the day BEFORE the first of a month) and writes two month ends.
 
-All of it is reproduced under
-[ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md): Finance reconciles the two
+All of it is reproduced under the parallel-period rule (§1, decision 3): Finance reconciles the two
 apps path by path, and a port that asked one question where the source asks several would disagree
 with it on most of them. `FlashMonthFilter` in `util/misFlashPeriods.ts` is what makes the
 distinction expressible — it carries the month a picker SHOWS beside the date that end SENDS, which
@@ -1407,9 +1515,8 @@ months directly rather than re-deriving them, which says so.
 
 ### Five of the Flash's six monthly views ignore the sub-region filter (ticket 15)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 `DataTable.js` hands the Integration column's `MonthlyViewDialog` the prop `subRegions={subRegions}`
 (`:175`) and hands the other five **`subregions=`**, with a lower-case r — `:226` (IAM), `:251`
@@ -1421,13 +1528,12 @@ So with a sub-region applied, a narrowed P&L opens an **unnarrowed** monthly vie
 columns — fourteen sections across twelve months, all company-wide, under a screen that says it is
 filtered.
 
-**Reproduced**, because this is a figures disagreement and therefore squarely
-[ADR 0003](../adr/0003-bug-for-bug-parity-during-the-parallel-period.md)'s subject: correcting it
-would make the port and the source disagree on five of six units for every figure in the dialog,
-which is precisely what the parallel period exists to prevent. Carried as
-`FlashUnitColumn.sendsSubRegions`, true for Integration alone, and pinned by tests in
-`flashPnlRows.test.ts` and `MisFlashPage.test.tsx` — a typo is exactly the kind of reproduction a
-later reader would "fix" without one. See §11.16.
+**Reproduced**, because this is a figures disagreement and therefore squarely what the
+parallel-period rule (§1, decision 3) is about: correcting it would make the port and the source
+disagree on five of six units for every figure in the dialog, which is precisely what the parallel
+period exists to prevent. Carried as `FlashUnitColumn.sendsSubRegions`, true for Integration alone,
+and pinned by tests in `flashPnlRows.test.ts` and `MisFlashPage.test.tsx` — a typo is exactly the
+kind of reproduction a later reader would "fix" without one. See §11.16.
 
 **The Full Report does not have the typo** (ticket 18). `fetchMonthlySummary` builds all six bodies
 from the page's `subRegion` state, so all six units' monthly sheets ARE narrowed. With a sub-region
@@ -1437,14 +1543,14 @@ the source's file contains. Each sheet's title names the sub-regions its reads w
 can be told apart. A monthly view's own Export writes what its dialog shows, typo included.
 
 **Which selection it narrows by is NOT reproduced.** The source's `subRegion` is the picker's LIVE
-state: `setSubRegion` runs on every change, while the P&L is re-read only on Search. So a reader
-who changes the picker and exports without pressing Search gets a Full Report whose six monthly
-sheets are narrowed by the new selection, beside an Annual Summary read under the old one, under a
-title naming the new one (`FlashConsole.js:168`, `:224`). The title's months come from the pickers
-too (`filterState`), not from the range the P&L was read under. The port reads, narrows and titles
-every sheet by the SEARCHED filters, the ones the P&L on screen was read under, so the file cannot
-disagree with itself. It is a knowing exception to ADR 0003 of the file-layout kind above, since
-once Search is pressed the two apps' files agree.
+state: `setSubRegion` runs on every change, while the P&L is re-read only on Search. So a reader who
+changes the picker and exports without pressing Search gets a Full Report whose six monthly sheets
+are narrowed by the new selection, beside an Annual Summary read under the old one, under a title
+naming the new one (`FlashConsole.js:168`, `:224`). The title's months come from the pickers too
+(`filterState`), not from the range the P&L was read under. The port reads, narrows and titles every
+sheet by the SEARCHED filters, the ones the P&L on screen was read under, so the file cannot
+disagree with itself. It is a knowing exception to the parallel-period rule of the file-layout kind
+above, since once Search is pressed the two apps' files agree.
 
 The same live state reaches the source's dialogs (`FlashConsole.js:518`, then `TableView` and
 `DataTable`). So between a change to the picker and Search, the source's Integration view is
@@ -1454,9 +1560,8 @@ it is left for ticket 19's parity check to judge, not decided here.
 
 ### What a Flash detail column asks for, and the month ticket 15 got wrong (tickets 15, 16)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 **The flash backend reads one range two ways**, and the dates a monthly range sends decide which
 month's figures come back:
@@ -1490,10 +1595,10 @@ halves of the backend read as M. Integer arithmetic on `{year, month}` (`flashMo
 `Date`, which is §3 and §10.8's rule and the only way to send one answer from every zone.
 
 What is **not** reproduced, then, is the zone: from UTC or California the source puts August's ARR
-under September. That stays a correction rather than an ADR 0003 reproduction, because a column of
-figures under the wrong month is the two apps describing different periods while appearing to describe
-the same one — not a disagreement a reconciler could settle. Colombo is where Finance works, and there
-the two apps now send an identical body for any given month's column.
+under September. That stays a correction rather than a parallel-period reproduction (§1), because a
+column of figures under the wrong month is the two apps describing different periods while appearing
+to describe the same one — not a disagreement a reconciler could settle. Colombo is where Finance
+works, and there the two apps now send an identical body for any given month's column.
 
 **Which months the view opens on is a different question, and still open** — see §11.17. On a first
 load from Colombo the source's detail view spans a month earlier than the port's, because its load
@@ -1509,9 +1614,8 @@ knowing before anyone reports it as a port defect.
 
 ### The Flash's Sub Region chips cannot be cleared (ticket 15)
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 
 `SubRegionFilter.js` holds the EXPANDED sub-region list as its state and derives which region chips
 are showing from it — a region counts as picked when every one of its sub-regions is in the list. Its
@@ -1560,12 +1664,12 @@ Nothing user-visible changes: Years Back 5 draws five Subscription columns in bo
 > the port's is always `columnDateRanges`. The field is derived and internal — never a URL
 > parameter — so nothing a reader holds depends on either spelling.
 
-**Nothing in the Subscription Build is totalled client-side.** ADR 0004 obliges hand-computed totals
-because the community grid cannot aggregate, and that obligation is real for the summary tables — but
-not here. `Ending ARR`, `Net New`, `Total New ARR` and `Total Churn ARR` all arrive on the response
-(`useArrTableSummary.js`, the row mapper), so the port adds no arithmetic of its own and must not: a
-client-side total would be a second opinion about a figure the backend already has one about, and the
-two would diverge the first time a filter changed the backend's definition.
+**Nothing in the Subscription Build is totalled client-side.** Decision 4 (§1) obliges hand-computed
+totals because the community grid cannot aggregate, and that obligation is real for the summary
+tables — but not here. `Ending ARR`, `Net New`, `Total New ARR` and `Total Churn ARR` all arrive on
+the response (`useArrTableSummary.js`, the row mapper), so the port adds no arithmetic of its own
+and must not: a client-side total would be a second opinion about a figure the backend already has
+one about, and the two would diverge the first time a filter changed the backend's definition.
 
 **The Subscription Build's row count is fixed, not measured.** Ticket 06 owed ticket 07 a row count.
 For this table the answer is a property of the code: every row is a named metric line, so the grid is
@@ -1586,9 +1690,9 @@ label agrees, spanning `dateRangeArr[1]` to the last range.
 The port keeps the distinction where the source puts it. The range is still REQUESTED — the backend
 walks the list it is given in order and a month's opening figures are the previous month's closing
 ones, so dropping it from the body could change the figures in the columns that ARE drawn, and
-ADR 0001 does not second-guess what a backend does with a request. `flashDetailColumns` is what takes
-the last twelve, and it carries each column's index into the response so a figure cannot shift by a
-month. The same shape as the sixth Annual Period above.
+decision 1 (§1) does not second-guess what a backend does with a request. `flashDetailColumns` is
+what takes the last twelve, and it carries each column's index into the response so a figure cannot
+shift by a month. The same shape as the sixth Annual Period above.
 
 **`integrationCloud`, on the Flash's P&L.** `DataTable.js:183-207` carries a complete column
 definition for it, commented out, and `BusinessUnitSummary` has no such field for it to read. Not
@@ -1663,17 +1767,16 @@ the first two branches are dead. Ported as the one real field.
 
 ### Access
 10. ARR privilege only: the four revenue screens, and no Flash entry anywhere — there is none
-    (ADR 0005).
+    (§1, decision 5).
 11. Flash privilege only: no MIS entry at all, and `/finance/mis/arr-build` renders the no-MIS-access
-    wording — the Flash privilege opens nothing in One WSO2 (ADR 0005).
+    wording — the Flash privilege opens nothing in One WSO2 (§1, decision 5).
 12. Neither privilege: no MIS entries and no MIS overview card.
 13. A new restricted rail item added without a gate mapping is hidden, not shown (fail-closed).
 
 ### Flash writes
 
-**Not ported** — the Flash Dashboard stays in the MIS app
-([ADR 0005](../adr/0005-flash-dashboard-stays-in-mis.md)). Kept as the record of the
-source's behaviour.
+**Not ported** — the Flash Dashboard stays in the MIS app (§1, decision 5). Kept as the record
+of the source's behaviour.
 14. A comment can be created, edited and deleted, and the list reflects each without a manual refresh.
 15. A budget edit after the cutoff surfaces the server's rejection and leaves the displayed value
     unchanged. **Ticket 16:** `MisFlashAccountsDialog.test.tsx`, "when the server refuses the edit".
@@ -1687,20 +1790,21 @@ source's behaviour.
     **Closed by ticket 11** (`misWorkbook.test.ts`), and deliberately asserted on the FILE rather than
     on the spec that produced it: a spec is the builders' own vocabulary and a test over it would agree
     with them by construction, where the bytes are what Finance opens. Ticket 18 extended it
-    to the Flash's workbook; that went with the Flash (ADR 0005). What stayed is the percentage
+    to the Flash's workbook; that went with the Flash (§1, decision 5). What stayed is the percentage
     rule, read back as 0.9825 under `0.00%` (`misWorkbook.test.ts`).
-18. An export taken while Scale is "Values in '000" is either exported in units, or carries the scale in
-    the file. The prototype found this exact foot-gun in the DataGrid's CSV, which silently inherits the
-    display formatter — a finance export that is 1000x off with nothing in it saying so.
-    **Closed by ticket 11**, taken BOTH ways — see §7. Pinned once per table, not once per port: each
-    of the four tables builds its own raw-figure reader, so each is exported at `?scale=k` with the
-    screen reading `All amounts in USD '000` and the cell still holding the unscaled figure under a
-    caption reading `All amounts in USD`. The drill-down needs no such test and has none — its Amount
-    column takes no Scale at any setting — so what is asserted there is that the cell holds the figure
-    rather than the dialog's formatted string, which is the same guarantee arrived at differently.
-    Worth knowing that the source has the same defect in a second form: its Flash workbook writes every
-    figure as a formatted STRING, so the file cannot be computed on at all.
-    (Ticket 18 asked it again at the Flash's three call sites; those went with the Flash, ADR 0005.)
+18. An export taken while Scale is "Values in '000" is either exported in units, or carries the
+    scale in the file. The prototype found this exact foot-gun in the DataGrid's CSV, which silently
+    inherits the display formatter — a finance export that is 1000x off with nothing in it saying
+    so. **Closed by ticket 11**, taken BOTH ways — see §7. Pinned once per table, not once per port:
+    each of the four tables builds its own raw-figure reader, so each is exported at `?scale=k` with
+    the screen reading `All amounts in USD '000` and the cell still holding the unscaled figure
+    under a caption reading `All amounts in USD`. The drill-down needs no such test and has none —
+    its Amount column takes no Scale at any setting — so what is asserted there is that the cell
+    holds the figure rather than the dialog's formatted string, which is the same guarantee arrived
+    at differently. Worth knowing that the source has the same defect in a second form: its Flash
+    workbook writes every figure as a formatted STRING, so the file cannot be computed on at all.
+    (Ticket 18 asked it again at the Flash's three call sites; those went with the Flash — §1,
+    decision 5.)
 
 ### The hand-rolled Build table
 19. The Build renders at 5, 8 and 12 Period groups without the layout collapsing, and the row-label
@@ -1894,12 +1998,12 @@ is still open.
 
    What that settles and what it leaves:
    - **Settled:** tenant, token format and gateway routing all work. Nothing in the port's code is
-     wrong, and ADR 0001 is not in play: the fix is a subscription on the consuming application, not
-     a change to any MIS service.
+     wrong, and decision 1 (§1) is not in play: the fix is a subscription on the consuming
+     application, not a change to any MIS service.
    - **Needed:** in Choreo, subscribe One WSO2's application to `mis-arr-backend`, the way it is
      already subscribed to OPD, CC and expense claims. Do it per environment; stage first. (This
-     first named `mis-flash-backend` too. The Flash stays in the MIS app — ADR 0005 — so One WSO2
-     has nothing to call there.)
+     first named `mis-flash-backend` too. The Flash stays in the MIS app (§1, decision 5), so One
+     WSO2 has nothing to call there.)
    - **Still open behind it:** whether the MIS services accept the `x-jwt-assertion` the gateway
      forwards, and their email-domain regex. That is the next hop and needs the subscription to
      exist first. It also leaves §11.4 unanswered: the gateway answered before the service could.
@@ -1957,10 +2061,10 @@ is still open.
    That belongs in configuration, never in code.
 3. **What are the real LDAP groups behind `987`?** `arrDashboardUserRoles` is a
    `configurable string[] = ?` supplied from Choreo config. (`789`'s, `flashDashboardUserRoles`, no
-   longer matters here: that privilege opens nothing in One WSO2, ADR 0005.) **Confirmed still
+   longer matters here: that privilege opens nothing in One WSO2 — §1, decision 5.) **Confirmed still
    open**: it is declared in the component's Ballerina schema but reads "(not set)" there, because
    its value arrives from a *secret* file mount, and the Choreo CLI does not return secret
-   contents. Read them from the Choreo console or via `scripts/mis-port-facts.sh` stage 5.
+   contents. Read them from the Choreo console.
 4. **Does `GET /user-info` return 200 with empty privileges for a non-MIS employee, or 403?** This
    decides whether the gate can show an honest locked state or must treat a denial as absence.
    **Probably 200-with-empty, on the source's evidence.** `arr-backend/service.bal:55-69` builds
@@ -1973,10 +2077,10 @@ is still open.
    Production while the live MIS config still points at it (§2.5). Establish whether comments work in
    production today before porting them — and if they moved, to what.
 
-   *Moot — the Flash Dashboard is not ported (ADR 0005); ticket 04 is closed wontfix.*
+   *Moot — the Flash Dashboard is not ported (§1, decision 5); ticket 04 is closed wontfix.*
 6. **Which of the four screens is actually used, and by how many people?** It changes what the tracer
    bullet should prove first and what may not need porting at all.
-7. **Who signs off the re-placed screens**, per [ADR 0002](../adr/0002-rethink-ia-rather-than-transcribe.md)?
+7. **Who signs off the re-placed screens**, per decision 2 (§1)?
 8. ~~**Is a minimum-width notice acceptable** in a shell that otherwise promises every screen works
    at every width, or should the Build degrade some other way below 1024px?~~ **ANSWERED: the notice,
    and the table still renders.** Decided in ticket 08 and built as
@@ -2035,8 +2139,14 @@ is still open.
 10. ~~**Is `987` the only privilege number that collides?**~~ **ANSWERED, and no — `789` collides
     too.** Found while building ticket 01. MIS's Flash privilege `789` is also leave-app's
     `LEAVE_PRIVILEGE.PEOPLE_OPS_TEAM` (`features/leave/api/leaveTypes.ts:58-63`), so *both* MIS
-    numbers are already spoken for in this app. Recorded in `CONTEXT.md` under **Privilege**. It
-    changes nothing in the design — the gate was always going to read MIS's own `/user-info` — but it
+    numbers are already spoken for in this app, and neither collision is the safe kind. A privilege
+    number means something only beside the `/user-info` that issued it. `987` is
+    `PRIVILEGE.EMPLOYEE`, every authenticated employee, to people-app and One WSO2, and
+    `LEAVE_PRIVILEGE.EMPLOYEE` to leave-app, but "may see the ARR dashboards" to MIS. `789` is
+    `LEAVE_PRIVILEGE.PEOPLE_OPS_TEAM` to leave-app and "may see the Flash Dashboard" to MIS. So
+    reading MIS access off the shared capability set would grant company-wide revenue reporting to
+    everybody, and reading it off leave-app's array would grant the P&L to People Ops. It changes
+    nothing in the design — the gate was always going to read MIS's own `/user-info` — but it
     removes the temptation to treat 987 as the single special case.
 11. **Does the Region Type cut belong in the address bar?** Exit ARR by Region is cut by Sales Region
     or Sub Region, the backend computes it (`isSalesRegionSummary`), and the source keeps the toggle
@@ -2054,9 +2164,10 @@ is still open.
 12. **Should an ARR Analysis link carry the view it was shared from?** The same question as §11.11,
     one screen along and ten controls wide. Every filter on ARR Analysis is component state in the
     source, so nothing reaches the address and a shared link opens on defaults — reproduced under
-    ADR 0003 rather than decided during ticket 13, for the reason §11.11 gives: extending the URL
-    contract ticket 02 pinned means deciding what an unrecognised value degrades to and what a stale
-    link means, which is a contract decision rather than a side effect of porting a table.
+    the parallel-period rule (§1) rather than decided during ticket 13, for the reason §11.11 gives:
+    extending the URL contract ticket 02 pinned means deciding what an unrecognised value degrades
+    to and what a stale link means, which is a contract decision rather than a side effect of
+    porting a table.
 
     It is a sharper question here than on the Region Summary, though, because of what the screen is
     for. A Region Summary link loses one cut; an ARR Analysis link loses the entire question — "here
@@ -2087,35 +2198,36 @@ is still open.
     visible in the pickers the moment the screen loads — but it is the same decision and should be
     taken once, for both screens, with Finance.
 
-    *Moot — the Flash Dashboard is not ported (ADR 0005).*
+    *Moot — the Flash Dashboard is not ported (§1, decision 5).*
 
 16. **Do Finance want the Flash's sub-region typo fixed in the source?** Ticket 15, §8. Five of the
     six monthly views drop the sub-region filter because of a lower-case `r` in a prop name, so a
     narrowed P&L opens an unnarrowed detail view on every column but Integration. The port
-    reproduces it under ADR 0003 rather than silently disagreeing with the app Finance is
-    reconciling against, but it is a one-character fix in `DataTable.js` and the port would follow it
-    the same day. **Worth raising**, because unlike the other reproductions this one is not a
-    judgement call anybody made — and a reader comparing Integration's detail view against IAM's
-    today is comparing a filtered figure with an unfiltered one.
+    reproduces it under the parallel-period rule (§1) rather than silently disagreeing with the app
+    Finance is reconciling against, but it is a one-character fix in `DataTable.js` and the port
+    would follow it the same day. **Worth raising**, because unlike the other reproductions this one
+    is not a judgement call anybody made — and a reader comparing Integration's detail view against
+    IAM's today is comparing a filtered figure with an unfiltered one.
 
-    *Moot — the Flash Dashboard is not ported (ADR 0005).*
+    *Moot — the Flash Dashboard is not ported (§1, decision 5).*
 
 17. **Which twelve months does the source's P&L open on in Colombo?** Found by ticket 16, left for
     ticket 19's parity check. It reaches the detail view too: the source derives its monthly ranges
     from the same load dates, so from Colombo its first-load detail view is headed Sep 2025 to Aug
     2026 where the port's is Oct 2025 to Sep 2026 — each column asking the same question as its
-    namesake, and the set of columns one month apart. The P&L's load range is seeded by `FlashConsole.js`'s mount effect
-    through `date.toISOString().split("T")[0]` over local midnights — the same construction §8 shows
-    moving the detail view's dates — so from Colombo it sends `2025-08-31 → 2026-08-31` where the port
-    sends `2025-09-01 → 2026-09-01`. The financial accounts read a range by its end MONTH (§8), so on
-    the trace those two are twelve different months: September 2025 to August 2026 in Colombo, October
-    2025 to September 2026 in the port and in the source from UTC or California. Ticket 15 reproduced
-    the UTC/Pacific load, which §3 makes canonical, and did not know the Colombo one asked a different
-    question. **One side-by-side load from Colombo settles it**: if the two P&Ls disagree by a month,
-    §3 and ADR 0003 pull opposite ways and it is a decision for Finance — whose month the Flash opens
-    on is not a port detail.
+    namesake, and the set of columns one month apart. The P&L's load range is seeded by
+    `FlashConsole.js`'s mount effect through `date.toISOString().split("T")[0]` over local midnights
+    — the same construction §8 shows moving the detail view's dates — so from Colombo it sends
+    `2025-08-31 → 2026-08-31` where the port sends `2025-09-01 → 2026-09-01`. The financial accounts
+    read a range by its end MONTH (§8), so on the trace those two are twelve different months:
+    September 2025 to August 2026 in Colombo, October 2025 to September 2026 in the port and in the
+    source from UTC or California. Ticket 15 reproduced the UTC/Pacific load, which §3 makes
+    canonical, and did not know the Colombo one asked a different question. **One side-by-side load
+    from Colombo settles it**: if the two P&Ls disagree by a month, §3 and the parallel-period rule
+    (§1) pull opposite ways and it is a decision for Finance — whose month the Flash opens on is not
+    a port detail.
 
-    *Moot — the Flash Dashboard is not ported (ADR 0005).*
+    *Moot — the Flash Dashboard is not ported (§1, decision 5).*
 
 18. **Can Cost of Sales forecasts be written from the source at all today?** Ticket 16, §7. On the
     code, no: the source's account view sends `expenseType`, and the flash backend has required
@@ -2127,11 +2239,11 @@ is still open.
     own wire form for them, `useFlashAccounts.ts`). If Finance have been editing Cost of Sales some
     other way, that is worth knowing before the old frontend goes dark.
 
-    *Moot — the Flash Dashboard is not ported (ADR 0005).*
+    *Moot — the Flash Dashboard is not ported (§1, decision 5).*
 
 19. **Does anything downstream read the Flash workbook by position or by name?** Ticket 18, §7.
-    [ADR 0002](../adr/0002-rethink-ia-rather-than-transcribe.md) wants this answered by a named
-    finance stakeholder. The port's file follows the screen:
+    Decision 2 (§1) wants this answered by a named finance stakeholder. The port's file follows the
+    screen:
     - the Annual Summary's units run Integration, IAM, APIM, Choreo, Corporate, WSO2, where today's
       file puts Corporate in its fourth column;
     - a unit is called what its column is called, so there are sheets named "Integration", "APIM"
@@ -2146,4 +2258,4 @@ is still open.
     exists. **Ask Finance once**, before the parallel period ends. If the answer is to keep today's
     order, it is one argument in `misFlashAnnualSheet`.
 
-    *Moot — the Flash Dashboard is not ported (ADR 0005).*
+    *Moot — the Flash Dashboard is not ported (§1, decision 5).*

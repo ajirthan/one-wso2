@@ -60,7 +60,7 @@ describe("the Finance MIS registry", () => {
     ]);
   });
 
-  // ADR 0005. The Flash Dashboard stays in the MIS app, so it is not a screen of
+  // Spec §1: the Flash Dashboard stays in the MIS app, so it is not a screen of
   // this registry — not a pathless row, not a row its privilege would open.
   it("leaves the Flash Dashboard out", () => {
     expect(items.map((item) => item.id)).not.toContain("mis-flash");

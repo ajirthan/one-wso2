@@ -175,7 +175,7 @@ export default function AnalysisIndustryChart({
                 cursor={{ fill: chrome.line }}
                 // `misHeadlineAmount`, the same formatter as the axis —
                 // NOT the reader's Scale. Everything ON a chart is a Headline
-                // (CONTEXT.md), so an axis reading `$1.2M` beside a tooltip
+                // and never scaled, so an axis reading `$1.2M` beside a tooltip
                 // reading `1,234.57` would be one chart contradicting itself.
                 // The exact figure, at the reader's Scale, is one row down in
                 // the companion table, which is what a table is for.

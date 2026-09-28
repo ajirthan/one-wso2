@@ -129,7 +129,7 @@ describe("analysisAccountRows", () => {
   // A DEVIATION from the source, and a deliberate one. `customerLifetime` is
   // `string` on the wire and the source's column takes the default string type,
   // so its Lifetime sorts lexicographically: "10 yrs" lands above "2 yrs". A
-  // sort order is not a figure Finance reconciles, so ADR 0003 does not protect
+  // sort order is not a figure Finance reconciles, so parity does not protect
   // it — this is a defect, and the port coerces the value and types the column
   // as a number. Spec §7.
   it("reads the lifetime as a number, so the column can sort as one", () => {

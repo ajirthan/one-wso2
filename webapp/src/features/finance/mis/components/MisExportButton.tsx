@@ -16,7 +16,7 @@
 
 // The one control that takes a MIS table out of the browser.
 //
-// ADR 0004 makes an export required scope rather than a caveat: a hand-rolled
+// An export is required scope (spec §1) rather than a caveat: a hand-rolled
 // `<table>` gets none of the select-and-paste a data grid gives free, and that
 // paste is Finance's existing workflow.
 
@@ -71,7 +71,7 @@ export default function MisExportButton({ workbook, filename }: MisExportButtonP
   return (
     <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
       {failed && (
-        // Not "couldn't build": CONTEXT.md reserves Build for the roll-forward
+        // Not "couldn't build": Build means only the finance roll-forward
         // this very screen is showing, and the sentence sits directly above one.
         <Typography variant="caption" color="error" role="alert">
           Couldn&apos;t write the file.

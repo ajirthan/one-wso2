@@ -41,12 +41,12 @@
 // every control on a screenful of data unable to narrow it.
 //
 // Partner Type keeps its floor of two, because Channel and Direct are the model
-// rather than data — CONTEXT.md names them — so the control can offer them
+// rather than data — the port's own terms for it — so the control can offer them
 // before an account has loaded. They are a floor and not a ceiling: an account
 // reporting something else is a fact about the book, and a menu that hid it
 // would leave rows nothing on the screen can select.
 //
-// Fixing the country key is not a breach of ADR 0003. That ADR protects
+// Fixing the country key is not a parity breach (spec §1). Parity protects
 // behaviour someone chose and Finance reconciles against; a menu built from a
 // key the response has never carried is a typo, its effect is a menu missing
 // options rather than a figure reading differently, and no figure moves either
@@ -76,7 +76,7 @@ export const EMPTY_ANALYSIS_MENUS: AnalysisMenus = {
  * The lists `GET /app-configs` can answer these controls with.
  *
  * `billingCountries` rather than `countries`: the Build's `countries` is the
- * SHIPPING list under the substitution ADR 0003 reproduces, and this screen's
+ * SHIPPING list under the substitution reproduced for parity, and this screen's
  * Country control filters on `billingCountries` — so the Build's list would
  * make the menu and the request disagree about which country a country is.
  */

@@ -19,7 +19,7 @@
 // A MIS filter bar is two sets of the same filters: the **Applied** set, which
 // the grid reflects and the URL carries, and the **Pending** set, which is what
 // the controls are showing while the reader makes up their mind. APPLY is the
-// step between them. That distinction is CONTEXT.md's, and it is the whole
+// step between them. That distinction is the whole
 // reason this module exists — everything here is a question about one of the
 // two sets or about the distance between them.
 //
@@ -587,7 +587,7 @@ export function yearsBackToRemember(
  *                   of the question rather than a narrowing of one Table.
  *   the unit tabs   which commit on their own and are not the bar's to reset —
  *                   EXCEPT on the way into Customers, where the source clears
- *                   them (`FilterBar.js:606`). Reproduced under ADR 0003: a
+ *                   them (`FilterBar.js:606`). Reproduced for parity: a
  *                   custom book there would put figures on screen that the app
  *                   Finance is reconciling against does not show.
  */

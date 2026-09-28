@@ -118,7 +118,7 @@ window.config = {
   //
   // Only the ARR service is configured here. MIS's Flash and Admin services
   // serve only the Flash Dashboard, which stays in the MIS app
-  // (docs/adr/0005-flash-dashboard-stays-in-mis.md), so they have no key.
+  // (docs/ported-apps/mis.md §1), so they have no key.
   //
   // Configuring the URLs is not enough to show MIS: every MIS screen is also
   // behind the `mis` preview flag (ONE_WSO2_PREVIEW_FEATURES, below) until

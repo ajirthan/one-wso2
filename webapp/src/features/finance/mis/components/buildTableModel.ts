@@ -165,12 +165,12 @@ export interface RowWindowInput {
  * (`react-window@1.8.11`, `dist/index.esm.js:1099-1106`), and that style is not
  * optional — it is how the library places rows. An absolutely positioned `<tr>`
  * leaves the table formatting context, which takes with it the four things
- * ADR 0004 chose a hand-rolled `<table>` to keep: the column widths the table
+ * a hand-rolled `<table>` was chosen to keep (spec §1): the column widths the table
  * algorithm computes across header and body, the `position: sticky` row-label
  * column, the sticky two-row header, and the `id`/`headers` wiring that is the
  * only way a screen reader can say which Period a figure belongs to. The
  * library's own table examples avoid this by dropping `<table>` for
- * `display: block` divs, which is the trade this ADR already refused.
+ * `display: block` divs, which is the trade the port already refused.
  *
  * What is left is the part react-window would have contributed anyway: an
  * index range from a scroll offset. That is this function, it is nine lines,

@@ -152,7 +152,7 @@ describe("the Finance rail", () => {
     expect(screen.queryByText("Flash Dashboard")).not.toBeInTheDocument();
   });
 
-  // ADR 0005: the Flash Dashboard stays in the MIS app, so its privilege has
+  // The Flash Dashboard stays in the MIS app (spec §1), so its privilege has
   // nothing to open here — not a Flash row, and not an empty MIS group either.
   it("offers no MIS entry at all to someone holding only the Flash privilege", () => {
     privileges.value = [789];

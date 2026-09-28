@@ -31,8 +31,8 @@
 // severity 1.0; the target is ≥ 8 and the normal-vision floor is ≥ 15.)
 //
 // **Re-run the validator before changing any value here**, once per mode. The
-// script is the `dataviz` skill's rather than this repo's — `scripts/` here
-// holds only `mis-port-facts.sh` — so run it from that skill's base directory:
+// script is the `dataviz` skill's rather than this repo's — it is not under
+// `scripts/` here — so run it from that skill's base directory:
 //
 //   node scripts/validate_palette.js "#2a78d6,#eb6834" --mode light --surface "#FFFFFF"
 //   node scripts/validate_palette.js "#3987e5,#d95926" --mode dark  --surface "#141417"

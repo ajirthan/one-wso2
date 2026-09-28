@@ -59,7 +59,7 @@ import { ScalePreferenceProvider } from "../util/ScalePreferenceContext";
 // because one screen has a condition of its own: ARR Analysis exists only while
 // its `productsUsageEnabled` flag is on. (It asked per screen for a second
 // reason while the Flash Dashboard was being ported, which MIS grants on a
-// privilege of its own; that screen stays in the MIS app — ADR 0005.)
+// privilege of its own; that screen stays in the MIS app — spec §1.)
 //
 // ---- and why it checks the ARR key specifically ---------------------------
 //

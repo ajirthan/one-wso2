@@ -55,7 +55,7 @@ export interface DrillDownCustomer {
  * What the source writes where a value is missing.
  *
  * Only in SOME columns — see `blank` below. The inconsistency is the source's
- * and is reproduced under ADR 0003 rather than tidied; recorded in
+ * and is reproduced for parity rather than tidied; recorded in
  * `docs/ported-apps/mis.md` §8.
  */
 export const DRILL_DOWN_NOT_AVAILABLE = "N/A";

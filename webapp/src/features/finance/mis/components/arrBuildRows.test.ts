@@ -204,8 +204,8 @@ describe("how big a Subscription Build can get", () => {
   it("stays well inside what an unwindowed table can render", () => {
     // The assertion that matters is the bound, not the exact number: adding a
     // metric row is ordinary, and going from tens of rows to hundreds would not
-    // be. ADR 0004 accepted hand-rolling on the understanding that windowing
-    // lands before the tables that need it.
+    // be. Hand-rolling the tables (spec §1) was accepted on the understanding
+    // that windowing lands before the tables that need it.
     for (const channelDirect of ["All", "Channel", "Direct"] as const) {
       expect(visibleRowCount(channelDirect)).toBeLessThan(100);
     }

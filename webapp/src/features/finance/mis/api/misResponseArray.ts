@@ -51,7 +51,7 @@ export function arrayIn<T>(payload: unknown): T[] {
  *
  * One caller: the two Exit ARR summaries and the Region Summary's movement
  * view (`useExitArr`). (The Flash reads that also used it were removed with the
- * Flash Dashboard, which stays in the MIS app — ADR 0005.)
+ * Flash Dashboard, which stays in the MIS app — spec §1.)
  */
 export function recordIn<T>(payload: unknown): T {
   const isRecord = typeof payload === "object" && payload !== null && !Array.isArray(payload);

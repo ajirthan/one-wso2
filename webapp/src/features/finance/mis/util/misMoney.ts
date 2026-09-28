@@ -33,7 +33,7 @@
 //
 // Ported from digiops-finance `arrDashboard/utils/valueFormat.js` and
 // `rowHeaders.js`. Every label is verbatim: they are the row headers the source
-// shows, which finance reconciles against during the parallel period (ADR 0003),
+// shows, which finance reconciles against during the parallel period (spec §8),
 // so they are a transcript rather than this app's own wording.
 
 import { MIS_SCALES, type MisScale } from "./misViewVocabulary";
@@ -45,9 +45,8 @@ const CURRENCY_CODE = "USD";
  * The row labels the Build and the Analysis grids share.
  *
  * `ENDING_ARR`, `TOTAL_CHURN_ARR` and `PERCENT_INCREASES_UPSELLS_TOTAL` say
- * words the glossary avoids, and keep them: each key names its own label, and
- * the labels are the source's. The exception is recorded in CONTEXT.md, under
- * Expansion / Reduction / Lost, rather than here.
+ * words this port otherwise avoids, and keep them: each key names its own
+ * label, and the labels are the source's, kept for parity (spec §8).
  */
 export const MIS_ROW_LABELS = {
   OPENING_ARR: "Opening ARR",

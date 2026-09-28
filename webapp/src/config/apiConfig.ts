@@ -1623,11 +1623,11 @@ export function buildMeetingsUrl(params: {
 
 // Finance MIS backend (digiops-finance/apps/mis) — the ARR service. The port
 // replaces the MIS frontend only; the Ballerina services are untouched. See
-// docs/adr/0001-mis-backends-untouched.md and docs/ported-apps/mis.md.
+// docs/ported-apps/mis.md §1.
 //
 // MIS has two more services, Flash and Admin, and neither is configured here:
 // they serve only the Flash Dashboard (its P&L, forecasts and comments), which
-// stays in the MIS app — docs/adr/0005-flash-dashboard-stays-in-mis.md.
+// stays in the MIS app — docs/ported-apps/mis.md §1.
 //
 // Three things differ from every sibling above, all of them load-bearing:
 //

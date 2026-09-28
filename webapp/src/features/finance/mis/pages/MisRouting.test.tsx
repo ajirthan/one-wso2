@@ -32,7 +32,7 @@ vi.setConfig({ testTimeout: 20_000 });
 // MIS URL they are and are not entitled to.
 //
 // Two populations: the ARR privilege, and not. (A Flash-only holder is the
-// second — the Flash Dashboard stays in the MIS app, ADR 0005, and the gate
+// second — the Flash Dashboard stays in the MIS app (spec §1), and the gate
 // suite pins that its privilege opens nothing here.) The gate suite proves the
 // decision; this proves the decision reaches the screen.
 //

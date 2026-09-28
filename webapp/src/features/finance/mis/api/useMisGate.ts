@@ -80,7 +80,7 @@ export interface MisGate {
 // 987 and One WSO2's PRIVILEGE.EMPLOYEE 987 are the same number meaning
 // opposite things — "may see company ARR" versus "is signed in". Reading one
 // for the other publishes the revenue of the company to everybody. See
-// misTypes.ts and CONTEXT.md.
+// misTypes.ts.
 //
 // `enabled` avoids firing /user-info while MIS isn't on screen.
 export function useMisGate(enabled = true): MisGate {

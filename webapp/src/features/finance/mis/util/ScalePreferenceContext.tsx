@@ -38,8 +38,8 @@ import { MIS_SCALES, type MisScale } from "./misViewVocabulary";
 // reader last choose?
 //
 // It lives with the feature rather than in `src/context/`, where the app-wide
-// providers are, because Scale is a Finance MIS word (CONTEXT.md defines it
-// under Finance MIS) and no screen outside MIS has one. `features/tour` holds
+// providers are, because Scale is a Finance MIS word (currency in units or
+// thousands) and no screen outside MIS has one. `features/tour` holds
 // its own provider on the same grounds. What "cross-page" means here is
 // cross-MIS-page, and `MisShell` — the frame every MIS screen already renders
 // through — is exactly that scope.

@@ -31,7 +31,7 @@ import { renderHook } from "@testing-library/react";
 // different there: 987 is people-app's "every authenticated user" (appMenu.ts
 // PRIVILEGE.EMPLOYEE) and leave-app's EMPLOYEE, and 789 is leave-app's
 // PEOPLE_OPS_TEAM (leaveTypes.ts:58-63). That is why this gate reads its own
-// /user-info and never the shared capabilities — see CONTEXT.md.
+// /user-info and never the shared capabilities.
 
 const state = {
   privileges: [] as number[],
@@ -97,7 +97,7 @@ describe("the ARR privilege", () => {
   });
 });
 
-// The Flash Dashboard stays in the MIS app — ADR 0005 — so its privilege has
+// The Flash Dashboard stays in the MIS app (spec §1), so its privilege has
 // nothing to open here. It must not be read as "some MIS access" either: a
 // Flash-only reader told they hold MIS access "just not to this screen" would go
 // looking for a screen One WSO2 does not have.

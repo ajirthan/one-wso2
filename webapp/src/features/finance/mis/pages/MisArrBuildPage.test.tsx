@@ -1169,7 +1169,7 @@ describe("what a Table switch does to the filters", () => {
 
   it("clears the unit selection on the way into Customers, as the source does", async () => {
     // `FilterBar.js:606` — the one Table whose switch also clears the units.
-    // Reproduced under ADR 0003.
+    // Reproduced for parity while both apps run side by side (spec §8).
     renderPage("?unit=custom&customBu=APIM_BU");
     await switchTable("Customers");
     expect(address()).toBe("?table=customers");
@@ -1349,7 +1349,7 @@ describe("the QRR and MRR Builds", () => {
   it("asks for thirteen months on the Monthly Build at its default Years Back", () => {
     // Years Back defaults to 1 off Annually, and `generateMonths` walks
     // `i <= yearsBack * 12` — so thirteen, which is the source's own
-    // off-by-one reproduced under ADR 0003 rather than corrected. No Years
+    // off-by-one reproduced for parity rather than corrected. No Years
     // Back slice applies here either: that is an Annually rule.
     renderPage("", MIS_PERIODS.MONTHLY);
     expect(summary.lastRanges).toHaveLength(13);

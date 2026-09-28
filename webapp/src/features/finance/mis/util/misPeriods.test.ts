@@ -268,7 +268,7 @@ describe("the column-range computer the URL contract takes", () => {
 describe("an Ending Month that is not a month", () => {
   // Unreachable from a link — `parseViewState` validates it first — but the two
   // halves of the source disagree here, and the port reproduces the
-  // disagreement rather than tidying it (ADR 0003).
+  // disagreement rather than tidying it, for parity (spec §8).
   it("ends a Calendar year on 31 December", () => {
     expect(
       getAnnualPeriods({ isYtd: true, endingMonth: "Nonsense", yearsBack: 0, asOf: ASOF }),
@@ -420,7 +420,7 @@ describe("Monthly columns", () => {
   it("gives THIRTEEN months at Years Back 1, which is the source's own off-by-one", () => {
     // `generateMonths` walks `i <= totalMonths` where `totalMonths` is
     // `yearsBack * 12`, so a year back is twelve months PLUS the current one —
-    // September 2025 through September 2026. Reproduced under ADR 0003: a
+    // September 2025 through September 2026. Reproduced for parity: a
     // column count that differs from the live app's is the first thing finance
     // would notice reconciling the two, and it is a column of real figures
     // rather than a duplicate.

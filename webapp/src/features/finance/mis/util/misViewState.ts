@@ -31,7 +31,7 @@
 //
 // Every rule below comes over verbatim from
 // digiops-finance/apps/mis/webapp/src/components/arrDashboard/utils/viewState.js.
-// The two apps run side by side through the parallel period (ADR 0003), and
+// The two apps run side by side through the parallel period (spec §1), and
 // people hold links already. Two apps, one URL shape. Where this port does
 // depart, the comment says so and names the reason; there are two such places,
 // `_applyId` and the summary mirror inside `applyWindow`, both marked below.

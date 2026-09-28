@@ -25,8 +25,8 @@ import {
   type BuildSubColumn,
 } from "./buildTableModel";
 
-// ADR 0004 committed this port to a hand-rolled table, and listed what that
-// obliges: four mechanisms MUI declines to provide, which this repo now owns
+// This port hand-rolls the table rather than use a data grid (spec §1), and
+// that obliges four mechanisms MUI declines to provide, which this repo now owns
 // forever. Each one is invisible when it works and each one breaks silently —
 // a header row that covers the labels it belongs to, a highlight that stops at
 // the frozen column, a figure a screen reader cannot place. So each is tested
@@ -315,7 +315,7 @@ describe("the row under the pointer", () => {
 
   // MUI's own row highlight is `.MuiTableRow-hover:hover { background-color:
   // rgba(0,0,0,0.04) }` — a translucent fill on the <tr>, which is exactly the
-  // mechanism ADR 0004 records as unusable here. It ships in the same generated
+  // mechanism that stops at the opaque frozen column. It ships in the same generated
   // sheet; what matters is that no row ever wears the class that turns it on.
   it("does not use MUI's own row hover, which is the mechanism that fails here", () => {
     renderTable(5);
@@ -562,7 +562,7 @@ describe("the figures themselves", () => {
 // a suite to fail. Raised to a bound the machine cannot cross rather than
 // trimmed to a number that looks better.
 describe("a Build with more rows than a document should hold", { timeout: 30_000 }, () => {
-  // ADR 0004 chose a hand-rolled `<table>` and listed row windowing as required
+  // The hand-rolled `<table>` was chosen (spec §1) with row windowing as required
   // scope in the same breath, because a hand-rolled table has no virtualization
   // and the per-customer Builds are hundreds of customers per business unit.
   //
@@ -708,7 +708,7 @@ describe("a Build with more rows than a document should hold", { timeout: 30_000
   });
 
   it("still holds the sub-header below the Period row, not on top of it", () => {
-    // The mechanism ADR 0004 singles out as having no precedent and no help
+    // The one hand-rolled mechanism (spec §1) with no precedent and no help
     // from MUI, checked in the state most likely to disturb it: the header is
     // measured from a row that is now sitting above a windowed body.
     renderTable(5, customers(3000));
@@ -717,7 +717,7 @@ describe("a Build with more rows than a document should hold", { timeout: 30_000
   });
 
   it("still dresses a row the way the Build reads it", () => {
-    // The per-cell borders and tints are two more of ADR 0004's four, and they
+    // The per-cell borders and tints are two more of the table's four, and they
     // are applied per row — so a windowed row is the one that would quietly
     // lose them.
     const rows: BuildRow[] = [
@@ -784,8 +784,8 @@ describe("a table whose rows need more than a name to identify them", () => {
   // movement's name — and the Software/Cloud Customers table needs eighteen
   // before the first figure: Account Name, Account ID, Owner, Source, both
   // countries, Industry, Sub Industry, Region, Sub Region, Activation and Churn
-  // dates, Lost Reason, Rating, Employee Count. ADR 0004 owns the frozen first
-  // column; this is that mechanism widened from one column to a run of them,
+  // dates, Lost Reason, Rating, Employee Count. The frozen first column is ours
+  // (spec §1); this is that mechanism widened from one column to a run of them,
   // and the one-column Build is now the degenerate case of the same code.
 
   const LEAD = [

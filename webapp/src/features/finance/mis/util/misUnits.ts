@@ -39,7 +39,7 @@ import { CUSTOM_UNIT } from "./misViewVocabulary";
 export const MIS_UNIT_CATEGORIES = ["BU", "Software", "Cloud", "Custom"] as const;
 export type MisUnitCategory = (typeof MIS_UNIT_CATEGORIES)[number];
 
-/** The tab labels. "Build" is the finance term — see CONTEXT.md, not `npm run build`. */
+/** The tab labels. "Build" is the finance roll-forward, not `npm run build`. */
 export const MIS_UNIT_CATEGORY_LABELS: Readonly<Record<MisUnitCategory, string>> = {
   BU: "BU Build",
   Software: "Software Build",

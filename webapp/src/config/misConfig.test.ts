@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Finance MIS's ARR service — the one MIS backend One WSO2 is configured for.
 // MIS has two more, Flash and Admin, which serve only the Flash Dashboard; it
-// stays in the MIS app (docs/adr/0005-flash-dashboard-stays-in-mis.md), so
+// stays in the MIS app (docs/ported-apps/mis.md §1), so
 // nothing here reads their URLs.
 //
 // Every URL in apiConfig is read at MODULE LOAD, so window.config has to be in
@@ -83,9 +83,9 @@ describe("the Finance MIS backend", () => {
     );
   });
 
-  // ADR 0005. A deployment still carrying the Flash and Admin keys configures
-  // nothing from them: no `isMis…Configured()` check and no service map is
-  // built for either.
+  // The Flash Dashboard stays in the MIS app (spec §1). A deployment still
+  // carrying the Flash and Admin keys configures nothing from them: no
+  // `isMis…Configured()` check and no service map is built for either.
   it("reads no Flash or Admin URL, even where a config still carries them", async () => {
     const c = (await loadWith(STAGING)) as Record<string, unknown>;
     for (const name of [

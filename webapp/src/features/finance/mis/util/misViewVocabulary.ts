@@ -18,7 +18,7 @@
 //
 // Ported from the slice of digiops-finance
 // apps/mis/webapp/src/components/arrDashboard/utils/tableConstants.js that the
-// view state needs. The names follow CONTEXT.md rather than the source where
+// view state needs. The names follow the port's terms rather than the source where
 // the two disagree — Period, not Timeframe — but every VALUE is verbatim,
 // because these strings go over the wire to the MIS backends and into links
 // people already hold.
@@ -87,7 +87,7 @@ export const MIS_TABLE_ORDER: readonly MisTable[] = [
  * How an Annually column is cut: calendar years, or trailing-twelve-month
  * windows. Not a Period and not an Applied filter.
  *
- * CONTEXT.md warns that "Window" carries two meanings in this port — it was
+ * Note that "Window" carries two meanings in this port — it was
  * also a MIS filter control, dropped from the FilterBar. This is the other one:
  * the column cut, which survives in the serialised view-state contract.
  */

@@ -57,7 +57,7 @@ import type { PartnerModelBreakdown } from "../api/useAnalysisBreakdowns";
 // (`ArrAnalysisDashboard.js:1901-1929`) — so the bar is already the shape this
 // screen degrades to, and this generalises it rather than inventing one.
 //
-// No figure moves. ADR 0003 protects the numbers Finance reconciles column by
+// No figure moves. Parity protects the numbers Finance reconciles column by
 // column, and those are in the companion table below, to the cent.
 //
 // ---- colour is by ENTITY, never by rank ------------------------------------

@@ -79,7 +79,7 @@ import { MIS_SCALES, type MisScale } from "../util/misViewVocabulary";
 // ---- where the Build's screens have a URL and this one does not ------------
 //
 // Every filter here is component state. The source's are too, so a shared link
-// opens on defaults in both apps — reproduced under ADR 0003 rather than fixed,
+// opens on defaults in both apps — reproduced for parity rather than fixed,
 // because extending the URL contract ticket 02 pinned is a contract decision
 // and not a side effect of porting a table. Recorded as an open question in
 // spec §11.
@@ -129,7 +129,7 @@ function ArrAnalysis() {
   const configs = useMisAppConfigs();
 
   // The reads are keyed on the SETTLED filters, the controls on the live ones.
-  // Named `settled` rather than `applied`: CONTEXT.md reserves **Applied
+  // Named `settled` rather than `applied`: the port reserves **Applied
   // filter** for one serialised into the query string, and nothing on this
   // screen is.
   // Ticket 13 had two reads per change and no debounce; the charts below take

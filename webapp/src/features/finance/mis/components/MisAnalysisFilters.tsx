@@ -77,7 +77,7 @@ import type { AnalysisMenus } from "../util/misAnalysisMenus";
 // The source calls its Business Units state `products` while labelling the
 // control "Business Units" and the count beside it "# Products In Use", which
 // makes two different things share a word in the code and not on the screen.
-// CONTEXT.md is explicit that a Business Unit is a Business Unit; see
+// Here a Business Unit is called a Business Unit, never `products`; see
 // `misAnalysisFilters.ts`.
 
 export interface MisAnalysisFiltersProps {
@@ -134,7 +134,7 @@ export default function MisAnalysisFilters({
               `analysisFilterTags`.
 
               It reads "3 filters" where the source reads "3 active", and the
-              difference is the glossary rather than taste. CONTEXT.md bans
+              difference is vocabulary rather than taste. The port never uses
               "active filter" as a synonym for **Applied filter** — and
               "Applied" is no better here, because it is defined as a filter
               serialised into the query string and nothing on this screen is.

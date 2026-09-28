@@ -125,7 +125,7 @@ describe("which columns a drill-down shows", () => {
 
 describe("what a cell says when the backend said nothing", () => {
   // The source is NOT uniform here and the port reproduces it rather than
-  // tidying it, under ADR 0003. Seven columns fall back to the literal "N/A";
+  // tidying it, for parity. Seven columns fall back to the literal "N/A";
   // four render an empty cell. The four are exactly the fields the backend
   // declares non-nullable — except Amount, which is also non-nullable and DOES
   // get the placeholder. Recorded in mis.md §8.

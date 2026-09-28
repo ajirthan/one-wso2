@@ -33,7 +33,7 @@ describe("the words a filename is built from", () => {
     );
     // The leading underscore is the source's and is kept: the `%` is stripped
     // AFTER the space beside it has already become one. Cosmetic, faithful, and
-    // ADR 0003 keeps this sort of thing during the parallel period so that two
+    // parity keeps this sort of thing during the parallel period so that two
     // exports of the same figure are filed under the same name on both sides.
     expect(misFilenameWord("% New Total")).toBe("_new_total");
   });

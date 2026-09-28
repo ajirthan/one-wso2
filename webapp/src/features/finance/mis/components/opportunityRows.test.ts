@@ -168,7 +168,7 @@ describe("OPPORTUNITY_COLUMNS", () => {
     ]);
   });
 
-  // `Source` heads the partner-type column, which CONTEXT.md would otherwise
+  // `Source` heads the partner-type column, which the port would otherwise
   // have called Channel / Direct. It is the source's header and Finance reads
   // it, so it stays — the same carve-out §8 makes for the Region Summary's
   // `Loss` and `First Sale`.

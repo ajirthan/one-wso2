@@ -33,7 +33,7 @@ vi.setConfig({ testTimeout: 20_000 });
 
 // ARR by partner model. A proportion BAR where the source draws a two-slice
 // pie — see the component for why, and note that no figure moves: the amounts
-// are in the companion table to the cent, which is what ADR 0003 protects.
+// are in the companion table to the cent, which is what parity protects.
 
 /** Both models asked about — the ordinary case. */
 const BOTH = new Set(["Channel", "Direct"]);

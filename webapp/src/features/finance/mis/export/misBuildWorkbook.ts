@@ -16,7 +16,7 @@
 
 // A Build table, described as a sheet.
 //
-// ADR 0004 lists an export path as required scope rather than a caveat: a
+// An export path is required scope (spec §1) rather than a caveat: a
 // hand-rolled `<table>` gets none of the select-and-paste a data grid gives
 // free, and that paste IS Finance's existing workflow.
 //
@@ -40,7 +40,7 @@
 // than documentary — the same shape `formatMisValue` uses for the same rule.
 //
 // (Ticket 18 extended this for the Flash's workbook; ticket 18's Flash work
-// was removed when the Flash Dashboard was kept in the MIS app — ADR 0005 —
+// was removed when the Flash Dashboard was kept in the MIS app (spec §1),
 // and only its percentage rule, below, stayed.)
 
 import type { BuildColumnGroup, BuildRow } from "../components/buildTableModel";

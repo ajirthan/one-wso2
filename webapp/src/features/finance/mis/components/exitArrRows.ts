@@ -208,7 +208,7 @@ function regionFigures(split: BuFigures | undefined): BuFigures {
  *
  * Reproduced rather than reconciled. It is `useExitArrByRegion.js`'s own
  * arithmetic, finance reconciles the port against the source for a full
- * reporting cycle (ADR 0003), and "the port's total differs from the live
+ * reporting cycle (spec §1), and "the port's total differs from the live
  * app's" is the one disagreement that would stop the port being trusted.
  * Recorded in `docs/ported-apps/mis.md` §8.
  */

@@ -19,7 +19,7 @@
 // They live here rather than inline for the reason `financeGridSx.ts` already
 // records: jsdom does not resolve an emotion-injected rule through
 // `getComputedStyle`, so a rendered assertion about a `:hover` or a sticky
-// offset passes just as happily with the rule deleted. ADR 0004 lists three
+// offset passes just as happily with the rule deleted. Hand-rolling leaves three
 // mechanisms this table has to own forever and none of them is decorative, so
 // each one is a value a test can hold still — and `BuildTable.test.tsx` also
 // checks that the component uses them, because a constant nothing reads is
@@ -27,7 +27,7 @@
 //
 // ---- why any of this is hand-rolled at all --------------------------------
 //
-// ADR 0004: the community `@mui/x-data-grid` this app ships cannot express a
+// Spec §1: the community `@mui/x-data-grid` this app ships cannot express a
 // Build — no column pinning, no row grouping, `pageSize` throws above 100. So
 // the table is a plain `<Table>`, and these are the pieces MUI then declines to
 // provide.
@@ -196,7 +196,7 @@ export const ROW_LABEL_CELL_SX = {
 /**
  * Where one identity cell sits horizontally.
  *
- * The pane ADR 0004 already owns, widened from one column to a run of them: the
+ * The hand-rolled frozen pane (spec §1), widened from one column to a run of them: the
  * Subscription Build names a row with a movement, and the Software/Cloud
  * Customers table needs seventeen columns to say which account a row is. A
  * frozen cell must also be OPAQUE — a translucent one lets the figures moving

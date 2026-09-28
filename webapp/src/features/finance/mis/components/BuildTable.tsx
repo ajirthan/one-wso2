@@ -58,7 +58,7 @@ import {
 // A Build reads down — an Opening balance, the movements that change it, a
 // Closing balance — and across, one column group per Period. Four things have
 // to be true at once, and it is the combination rather than any one of them
-// that decided this is hand-rolled rather than a data grid (ADR 0004):
+// that decided this is hand-rolled rather than a data grid (spec §1):
 //
 //   1. the row-label column stays put while two dozen numeric columns scroll
 //   2. the header stays put while the rows scroll under it
@@ -570,7 +570,7 @@ function useMeasuredValue<T extends HTMLElement>(
 /**
  * Which rows to put in the document.
  *
- * ADR 0004 named this as required scope rather than a caveat: a hand-rolled
+ * Required scope of hand-rolling (spec §1), not a caveat: a hand-rolled
  * `<table>` has no virtualization, and the per-customer Builds are hundreds of
  * customers per business unit. Rendering all of them is not slow in the way a
  * long list is slow — every row is `columnGroups × subColumns` cells, and every

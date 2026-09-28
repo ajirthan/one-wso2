@@ -78,7 +78,7 @@ describe("the column a request is compared against", () => {
     //
     // "Three months before" 31 December is 1 OCTOBER, not 30 September: the
     // source's `setMonth` keeps the day of the month, and a 31 September rolls
-    // over. Wrong-looking, and reproduced under ADR 0003 — it is the opening the
+    // over. Wrong-looking, and reproduced for parity — it is the opening the
     // old app asks for in Colombo, where the Build is reconciled (spec §8). The
     // leftmost Quarterly column always opens on 31 December, so this is the
     // only case it meets.

@@ -141,7 +141,7 @@ export interface TtmPeriodsOptions {
  * ranges, the newest ending at the as-of end and each earlier one a year before
  * it.
  *
- * (Ranges, not "windows". CONTEXT.md warns that Window is overloaded in this
+ * (Ranges, not "windows". Window carries two meanings in this
  * port, and `misViewVocabulary.ts` has already spent it on the column CUT —
  * Calendar or TTM. One column of a TTM cut is a range, and calling it a window
  * too would make the word mean two things inside one module.)
@@ -173,7 +173,7 @@ export function getTtmPeriods({
  * Note the fallback differs from `annualEnd`'s: an Ending Month that is not a
  * month ends a TTM column at today, where it ends a Calendar year on 31
  * December. That asymmetry is the source's, between `ttmPeriods.js` and
- * `annualPeriods.js`, and it is reproduced rather than reconciled (ADR 0003).
+ * `annualPeriods.js`, and it is reproduced rather than reconciled (spec §8).
  * Neither branch is reachable from a link.
  */
 const ttmEnd = (today: MisCivilDate, endingMonth?: string): MisCivilDate => {
@@ -365,7 +365,7 @@ export function getQuarterlyPeriods({
  * **That is thirteen columns at Years Back 1, not twelve**, and the extra one
  * is the source's rather than a mistake here: `generateMonths` walks
  * `i <= totalMonths` (`tableUtils.js:228`), so a year back is twelve months
- * PLUS the current one. Reproduced under ADR 0003 — it is a column of real
+ * PLUS the current one. Reproduced for parity — it is a column of real
  * figures, and a port showing twelve where the live app shows thirteen is the
  * first thing finance would trip over reconciling the two.
  *

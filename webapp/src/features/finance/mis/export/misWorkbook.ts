@@ -33,7 +33,7 @@
 // pins it by loading its bytes back.
 //
 // (The source's Flash workbook, where its ExcelJS work began, is not ported:
-// the Flash Dashboard stays in the MIS app — ADR 0005.)
+// the Flash Dashboard stays in the MIS app — spec §1.)
 
 import { saveBlob } from "@utils/saveFile";
 

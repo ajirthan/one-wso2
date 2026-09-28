@@ -310,7 +310,7 @@ describe("what a Table switch does to the filters", () => {
 
   it("resets the unit selection on the way into Customers, as the source does", () => {
     // `FilterBar.js:606` — the one Table whose switch also clears the units.
-    // Reproduced under ADR 0003: a custom book here would put different figures
+    // Reproduced for parity (spec §8): a custom book here would put different figures
     // on screen from the app Finance is reconciling against.
     const before = appliedFor({ buProductSelection: "CUSTOM", customBusinessUnits: ["APIM_BU"] });
     const after = filtersAfterSwitch(before, customers, null);

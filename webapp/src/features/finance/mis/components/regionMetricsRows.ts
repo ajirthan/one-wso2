@@ -226,13 +226,13 @@ export interface RegionMetricsSubColumn extends BuildSubColumn {
  * "Reduction", "Loss", "First Sale" and "Closing ARR". That inconsistency is the
  * source's, between two of its own screens, and it is reproduced rather than
  * harmonised: finance reconciles the port against the live app column by column
- * for a full reporting cycle (ADR 0003), and a renamed column is a disagreement
+ * for a full reporting cycle (spec §1), and a renamed column is a disagreement
  * somebody has to investigate before the figures can be trusted.
  *
- * Two of the five are words `CONTEXT.md` does not use — the glossary's terms are
+ * Two of the five are words this port does not otherwise use — its terms are
  * **Lost** and **New** — so "Loss" and "First Sale" here are headers this repo's
- * own vocabulary would otherwise forbid. The glossary carries the carve-out and
- * `docs/ported-apps/mis.md` §8 the reasoning; harmonising the two screens is a
+ * own vocabulary would otherwise forbid. They are the source's labels, kept for
+ * parity (`docs/ported-apps/mis.md` §8); harmonising the two screens is a
  * decision for after the parallel period rather than a rename in one file.
  *
  * Widths are the source's `minWidth`s, which is what these columns settle at

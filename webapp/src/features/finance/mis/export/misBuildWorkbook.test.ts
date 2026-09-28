@@ -79,7 +79,7 @@ describe("a Build, as a sheet", () => {
 
   it("puts the Periods over their sub-columns, and the identity columns beside", () => {
     const sheet = misBuildSheet(INPUT);
-    // Two header rows, the same two ADR 0004 makes the table draw by hand.
+    // Two header rows, the same two the hand-rolled table draws (spec §1).
     expect(sheet.rows[2].cells.map((cell) => cell.value)).toEqual([null, "2024", "2025"]);
     expect(sheet.rows[3].cells.map((cell) => cell.value)).toEqual(["Summary", "ARR", "ARR"]);
   });

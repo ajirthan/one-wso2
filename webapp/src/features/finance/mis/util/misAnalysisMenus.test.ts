@@ -64,7 +64,7 @@ describe("each list menu", () => {
   });
 
   // `billingCountries`, not `countries`. The Build's `countries` is the
-  // SHIPPING list under ADR 0003's reproduced substitution, and ARR Analysis's
+  // SHIPPING list under the substitution reproduced for parity, and ARR Analysis's
   // Country control filters on `billingCountries` — so feeding it the Build's
   // list would make the menu and the request disagree about which country a
   // country is.
@@ -80,7 +80,7 @@ describe("each list menu", () => {
 describe("Partner Type", () => {
   // The one control `GET /app-configs` sends no list for. Channel and Direct
   // are written down because they are the model itself rather than data —
-  // CONTEXT.md names them — so the control offers them before any account has
+  // the port's own terms for it — so the control offers them before any account has
   // loaded.
   it("always offers the two partner models, loaded accounts or not", () => {
     expect(analysisMenus({}, EMPTY_SCRAPED_OPTIONS).partnerTypes).toEqual(["Channel", "Direct"]);
@@ -89,7 +89,7 @@ describe("Partner Type", () => {
   // Merged rather than replaced: the two models are a floor, not a ceiling. An
   // account reporting something else is a fact about the book, and a menu that
   // hid it would leave rows nothing on the screen can select. (The fixture
-  // deliberately avoids "Reseller" — CONTEXT.md lists it as a word not to use
+  // deliberately avoids "Reseller" — the port never uses that word
   // for a partner model, and this case is exactly the one where a reader might
   // take it for a synonym of Channel.)
   it("adds anything else the accounts actually report", () => {
