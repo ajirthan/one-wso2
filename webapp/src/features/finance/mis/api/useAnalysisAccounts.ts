@@ -97,7 +97,7 @@ export function useAnalysisAccounts(
   };
 }
 
-export interface AnalysisSummaryArrState {
+export interface AnalysisHeadlineArrState {
   /**
    * Absent rather than zero when there is no answer yet or the read failed.
    *
@@ -126,11 +126,11 @@ export interface AnalysisSummaryArrState {
  * which is what the source's own card does too (`derivedSummary.logoCount` is
  * `accountsRows.length`, not the backend's zero).
  */
-export function useAnalysisSummaryArr(
+export function useAnalysisHeadlineArr(
   filters: MisAnalysisFilters,
   today: MisCivilDate,
   enabled = true,
-): AnalysisSummaryArrState {
+): AnalysisHeadlineArrState {
   const bodies = useMemo(
     () => [analysisExitArrRequest(filters, today)],
     [filters, today],

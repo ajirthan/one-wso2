@@ -129,7 +129,7 @@ export function analysisAccountsRequest(
 }
 
 /**
- * The summary figure's body: the same narrowing, over a span.
+ * The Headline's body: the same narrowing, over a span.
  *
  * The span opens at the END of the previous calendar year, which is what makes
  * the figure a year-to-date reading rather than a balance — a January day reads

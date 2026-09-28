@@ -1041,9 +1041,9 @@ narrowed to that third type: two figures on one screen answering different quest
 for neither and says the split does not apply. Eight reads instead of ten, and one fewer way to
 misread the screen.
 
-**Industry shares are of the rows shown, not of the summary figure.** Identical whenever the six fit
+**Industry shares are of the rows shown, not of the Headline.** Identical whenever the six fit
 inside the total — Other is exactly the difference — and different when they EXCEED it, because Other
-floors at zero. Dividing by the summary figure there gave shares summing to 180%. The source divides
+floors at zero. Dividing by the Headline there gave shares summing to 180%. The source divides
 by its rows (`ArrAnalysisDashboard.js:878-882`) and so does this.
 
 **What is ON a chart is never scaled; what is in its table always is.** The axis ticks and the

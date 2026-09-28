@@ -202,7 +202,7 @@ describe("the optional filters, which both bodies share", () => {
 });
 
 describe("POST /exit-arr/search", () => {
-  // The summary figure above the table. A SPAN, so it carries both dates —
+  // The Headline above the table. A SPAN, so it carries both dates —
   // and the span the source asks for is "since the end of last calendar year",
   // which is what makes the figure a year-to-date reading rather than a
   // balance. `arrAnalysisApi.js:41-46`.

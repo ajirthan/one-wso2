@@ -122,7 +122,7 @@ describe("industrySeries", () => {
   });
 
   // "Other" is not a seventh industry the backend reports — it is whatever the
-  // total holds that the six do not, which is why it needs the summary figure.
+  // total holds that the six do not, which is why it needs the Headline.
   it("makes Other the total less the six named industries", () => {
     const rows = industrySeries({
       byIndustry: answers({ Information: 400, Utilities: 100 }),
@@ -132,7 +132,7 @@ describe("industrySeries", () => {
     expect(rows.at(-1)).toMatchObject({ industry: "Other", amount: 500 });
   });
 
-  // The shares are of what the CHART SHOWS, not of the summary figure — which
+  // The shares are of what the CHART SHOWS, not of the Headline — which
   // are the same number whenever the six fit inside the total, and are not when
   // they do not. Dividing by `totalArr` gave 90/90/0 summing to 180%: seven
   // bars whose shares do not add up, on a chart whose whole job is composition.

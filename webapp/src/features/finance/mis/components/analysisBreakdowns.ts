@@ -230,7 +230,7 @@ export function industrySeries({
   // happened to answer would be a different statistic wearing the same label.
   if (totalArr == null || totalArr <= 0) return rows;
 
-  // The denominator is what the CHART SHOWS, not the summary figure. The two
+  // The denominator is what the CHART SHOWS, not the Headline. The two
   // are the same number whenever the six fit inside the total — Other is
   // exactly the difference — and they part company when the six EXCEED it,
   // because Other floors at zero. Dividing by `totalArr` there gave shares

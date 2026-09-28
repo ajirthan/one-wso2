@@ -30,7 +30,7 @@ import {
   type AnalysisScrapedOptions,
 } from "../components/analysisAccountRows";
 import { useMisAppConfigs } from "../api/useMisAppConfigs";
-import { useAnalysisAccounts, useAnalysisSummaryArr } from "../api/useAnalysisAccounts";
+import { useAnalysisAccounts, useAnalysisHeadlineArr } from "../api/useAnalysisAccounts";
 import {
   useAnalysisIndustries,
   useAnalysisPartnerModels,
@@ -141,7 +141,7 @@ function ArrAnalysis() {
   const settled = useDebouncedValue(filters);
 
   const accounts = useAnalysisAccounts(settled, today);
-  const summary = useAnalysisSummaryArr(settled, today);
+  const headline = useAnalysisHeadlineArr(settled, today);
   const partnerModels = useAnalysisPartnerModels(settled, today);
   const industries = useAnalysisIndustries(settled, today, configs.options.industries);
 
@@ -184,11 +184,11 @@ function ArrAnalysis() {
       <SummaryCards
         asOf={settled.asOf}
         today={today}
-        arr={summary.arr}
-        isLoading={summary.isLoading}
-        isError={summary.isError}
-        errorMessage={summary.errorMessage}
-        retry={summary.retry}
+        arr={headline.arr}
+        isLoading={headline.isLoading}
+        isError={headline.isError}
+        errorMessage={headline.errorMessage}
+        retry={headline.retry}
         accountCount={accounts.rows.length}
         accountsLoading={accounts.isLoading}
         scale={scale}
@@ -228,7 +228,7 @@ function ArrAnalysis() {
         <AnalysisPartnerModelChart breakdown={partnerModels} scale={scale} />
         <AnalysisIndustryChart
           breakdown={industries}
-          totalArr={summary.arr}
+          totalArr={headline.arr}
           scale={scale}
         />
       </Box>

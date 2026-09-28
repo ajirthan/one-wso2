@@ -63,7 +63,7 @@ vi.mock("@api/http", async () => {
   };
 });
 
-const { useAnalysisAccounts, useAnalysisSummaryArr } = await import("./useAnalysisAccounts");
+const { useAnalysisAccounts, useAnalysisHeadlineArr } = await import("./useAnalysisAccounts");
 const { defaultAnalysisFilters } = await import("../util/misAnalysisFilters");
 
 const ON = { year: 2026, month: 9, day: 21 };
@@ -124,7 +124,7 @@ describe("the account table's read", () => {
   });
 });
 
-describe("the summary figure's read", () => {
+describe("the Headline's read", () => {
   // `POST /exit-arr/search` returns a bare `decimal`
   // (`arr-backend/service.bal:266`), which is the whole reason this needs its
   // own hook rather than another `arrayIn` caller: the payload is a NUMBER, and
@@ -132,7 +132,7 @@ describe("the summary figure's read", () => {
   it("reads the bare number the endpoint answers with", async () => {
     answers.set(EXIT_ARR, 4_250_000.5);
     const { result } = renderHook(
-      () => useAnalysisSummaryArr(defaultAnalysisFilters(ON), ON),
+      () => useAnalysisHeadlineArr(defaultAnalysisFilters(ON), ON),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -144,7 +144,7 @@ describe("the summary figure's read", () => {
   it("reads a figure that arrived as a string", async () => {
     answers.set(EXIT_ARR, "4250000.50");
     const { result } = renderHook(
-      () => useAnalysisSummaryArr(defaultAnalysisFilters(ON), ON),
+      () => useAnalysisHeadlineArr(defaultAnalysisFilters(ON), ON),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -157,7 +157,7 @@ describe("the summary figure's read", () => {
   it("has no figure at all when the read failed, rather than zero", async () => {
     answers.set(EXIT_ARR, new HttpError("https://mis.example", 403, ""));
     const { result } = renderHook(
-      () => useAnalysisSummaryArr(defaultAnalysisFilters(ON), ON),
+      () => useAnalysisHeadlineArr(defaultAnalysisFilters(ON), ON),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -167,7 +167,7 @@ describe("the summary figure's read", () => {
   it("reads a 200 that is not a number as no figure", async () => {
     answers.set(EXIT_ARR, "<html>gateway</html>");
     const { result } = renderHook(
-      () => useAnalysisSummaryArr(defaultAnalysisFilters(ON), ON),
+      () => useAnalysisHeadlineArr(defaultAnalysisFilters(ON), ON),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -187,7 +187,7 @@ describe("the table and the figure above it", () => {
     renderHook(
       () => {
         useAnalysisAccounts(filters, ON);
-        useAnalysisSummaryArr(filters, ON);
+        useAnalysisHeadlineArr(filters, ON);
       },
       { wrapper },
     );

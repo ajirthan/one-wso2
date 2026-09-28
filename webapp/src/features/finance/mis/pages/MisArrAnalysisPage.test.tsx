@@ -111,7 +111,7 @@ vi.mock("../api/useAnalysisAccounts", () => ({
     errorMessage: "",
     retry: () => {},
   }),
-  useAnalysisSummaryArr: () => ({
+  useAnalysisHeadlineArr: () => ({
     arr: 0,
     isLoading: false,
     isError: false,
