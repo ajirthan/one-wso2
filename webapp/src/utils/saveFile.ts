@@ -26,6 +26,16 @@
 // worth avoiding: it is the sort of thing that gets omitted when the code is
 // written again from memory, and the bug it prevents appears on one browser.
 
+// The formats this app writes. Anything else is saved as bare bytes, so a
+// caller handing over a server-influenced type can never have the browser treat
+// the file as HTML in the app's origin — the same guard as financeReceipts's
+// `safeType`. A new format is one line here, and until it has one it still
+// downloads, just untyped.
+const SAVEABLE_TYPES = new Set([
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv;charset=utf-8",
+]);
+
 /**
  * Save `blob` to the reader's downloads as `filename`.
  *
@@ -33,7 +43,8 @@
  * the download if the blob is freed in the same tick as the click.
  */
 export function saveBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
+  const safe = SAVEABLE_TYPES.has(blob.type) ? blob : new Blob([blob], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(safe);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
