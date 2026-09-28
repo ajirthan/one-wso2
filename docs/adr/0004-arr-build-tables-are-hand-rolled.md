@@ -7,14 +7,14 @@ grouping, tree data and aggregation are not in the package at all. A three-varia
 four required capabilities at once — sticky first column, sticky two-row grouped header, three-level
 collapsible row sections, and horizontal scroll at 24 columns — with no new dependency and no licence.
 So the Build and the Flash P&L are hand-rolled; ARR Analysis's flat account table still takes the
-DataGrid, per the policy in `LeaveReportsPage.tsx:315-318`.
+DataGrid, per the policy in `LeaveReportsPage.tsx:313-317`.
 
 ## Consequences — these are required scope, not caveats
 
 1. **Row windowing has to be written.** *Built in ticket 07; see the revisit below.* There is no
    virtualization. The
    prototype rendered ~2,500 live DOM cells from *seven* fake customers; the real Build is hundreds of
-   customers per business unit across six units and four movements. `AttendeeGrid.tsx:46-64` already
+   customers per business unit across six units and four movements. `AttendeeGrid.tsx:44-64` already
    designates this as the escape hatch — *"If one ever arrives with several thousand, render windowing
    goes HERE — not another library."* This port is that case, and the prediction held: the windowing
    went there, and not another library. See the revisit section below.
@@ -39,7 +39,7 @@ And these bespoke mechanisms become ours to maintain, none of which has a preced
 - **MUI X Pro.** Delivers column pinning, tree data and aggregation in one component and deletes every
   bespoke mechanism above. Rejected on procurement cost, not on merit — revisit if row windowing
   proves harder than expected, since that is the item most likely to invalidate this decision. Note
-  that the repo's existing objection to grid libraries (`AttendeeGrid.tsx:46-64`) was written about
+  that the repo's existing objection to grid libraries (`AttendeeGrid.tsx:44-64`) was written about
   `react-datasheet-grid` and does not transfer cleanly: Pro is the same component already rendering in
   this app, upgraded. **Ticket 07 built the windowing and triggered that revisit — see below.**
 

@@ -4,8 +4,10 @@ Finance MIS's Flash Dashboard (the monthly P&L flash, its forecasts, its comment
 export) is not ported into One WSO2. It stays in the MIS app, as it is. One WSO2's Finance MIS is the
 ARR, QRR and MRR Builds and ARR Analysis. Decided by the port's owner on 2026-09-24. It was a scope
 decision, not a technical finding, taken after tickets 15, 16 and 18 had built the P&L, forecast
-editing and export. That code is removed rather than left unreachable; it remains in history from
-`53829f1` to `1083da9` if the decision is ever reversed.
+editing and export. That code is removed rather than left unreachable; it remains in history if the
+decision is ever reversed, from `feat(mis): the Flash P&L read view` up to the commit before
+`feat(mis): keep the Flash Dashboard in the MIS app`. Named by subject rather than hash, because a
+rebase rewrites the hashes and the subjects survive it.
 
 ## Consequences
 
