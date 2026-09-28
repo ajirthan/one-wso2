@@ -333,7 +333,7 @@ Rules carried over from the source verbatim, because bookmarked links must keep 
 | `channel` | `All`, `Channel`, `Direct` | |
 | `cumulative` | `1`/`0` | Quarterly and Monthly only |
 | `scale` | `k` | Thousands; units is the default |
-| `region`, `subRegion`, `billingCountry`, `shippingCountry`, `industry`, `subIndustry`, `owner`, `techOwner`, `channelMgr` | applied list filters | Comma-separated |
+| `region`, `subRegion`, `billingCountry`, `shippingCountry`, `industry`, `subIndustry`, `owner`, `techOwner`, `channelMgr` | applied list filters | Comma-separated; a comma inside a value is written `%2C` and a `%` as `%25`, so "Korea, Republic of" stays one value |
 
 **Scale is the one ambiguity to settle in review.** The source writes `scale=k` to the URL but
 deliberately does not count it when deciding whether a link carried view state — its comment reads

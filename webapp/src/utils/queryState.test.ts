@@ -76,6 +76,23 @@ describe("listParam", () => {
     expect(listParam.parse(",,")).toBeUndefined();
     expect(listParam.parse(" , ")).toBeUndefined();
   });
+
+  // Country names carry commas of their own ("Korea, Republic of"), and so do
+  // the owner names a filter can hold. Split on every comma, one such value and
+  // one more come back as three — a different filter, in a shared link, with
+  // nothing on screen to say so.
+  it("keeps a comma inside a value through a link", () => {
+    const countries = ["Korea, Republic of", "United States"];
+    const query = queryWriter();
+    query.setIfChanged("billingCountry", countries, undefined, listParam);
+    expect(queryReader(query.toString()).read("billingCountry", listParam)).toEqual(countries);
+  });
+
+  // The escape is itself text a value could hold, so it has to be escaped in
+  // turn — or a value that happens to read `%2C` comes back with a comma in it.
+  it("keeps a value that already reads like the escape", () => {
+    expect(listParam.parse(listParam.format(["50%2C off", "100%"]))).toEqual(["50%2C off", "100%"]);
+  });
 });
 
 describe("oneOfParam", () => {

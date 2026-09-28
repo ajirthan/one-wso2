@@ -86,16 +86,23 @@ export const booleanParam: QueryParamCodec<boolean> = {
  * A list with nothing left in it is `undefined`, not `[]`. An empty list is not
  * a filter, and returning one would make `?region=` count as an applied filter
  * that happens to match nothing — a view the reader cannot tell from a bug.
+ *
+ * A comma INSIDE a value is written `%2C`, so "Korea, Republic of" stays one
+ * value rather than splitting in two — and a `%` is written `%25`, so a value
+ * that already reads `%2C` is not mistaken for one. Only those two: a value
+ * without either is written exactly as before, so every link that already
+ * works still does. Decoded in one pass, so `%252C` comes back as the `%2C` it
+ * was rather than being unescaped twice into a comma.
  */
 export const listParam: QueryParamCodec<string[]> = {
   parse: (raw) => {
     const items = raw
       .split(",")
-      .map((item) => item.trim())
+      .map((item) => item.replace(/%2C|%25/g, (escape) => (escape === "%2C" ? "," : "%")).trim())
       .filter(Boolean);
     return items.length ? items : undefined;
   },
-  format: (value) => value.join(","),
+  format: (value) => value.map((item) => item.replaceAll("%", "%25").replaceAll(",", "%2C")).join(","),
 };
 
 /**
