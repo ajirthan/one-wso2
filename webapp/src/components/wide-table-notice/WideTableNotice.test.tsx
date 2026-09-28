@@ -172,6 +172,21 @@ describe("dismissing it", () => {
     setViewportWidth(400);
     expect(notice()).not.toBeInTheDocument();
   });
+
+  // Spec §10.22g. Remembered once per READER, not once per table: what they have
+  // understood is "wide tables here scroll", which is not a fact about the
+  // Subscription Build. Switching to Software/Cloud Customers mounts another
+  // table, far wider, and it must not ask again. A different width is the only
+  // thing that tells two tables apart at this component's interface, so it is
+  // what a per-table memory would have to key on.
+  it("keeps it dismissed on a second, different table", async () => {
+    const first = showNarrow();
+    await userEvent.setup().click(screen.getByRole("button", { name: /dismiss/i }));
+    first.unmount();
+
+    render(<WideTableNotice tableMinWidth={CUSTOMERS_TABLE} />);
+    expect(notice()).not.toBeInTheDocument();
+  });
 });
 
 // `localStorage` throws under private browsing and blocked site data, and this
