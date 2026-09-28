@@ -36,6 +36,7 @@ import {
   buildColumnLabel,
   asOfColumnLabel,
   buildColumnRanges,
+  customerColumnRanges,
   pacificColumnRanges,
 } from "@features/finance/mis/util/misPeriods";
 import type { ArrSummaryState } from "@features/finance/mis/api/useArrSummary";
@@ -1534,14 +1535,69 @@ describe("opening the opportunities behind an account", () => {
     return within(row).getAllByRole("button")[0];
   };
 
-  it("opens on a figure cell, and asks for that account as at that column", async () => {
-    renderPage("?table=customers");
-    await userEvent.click(northwindFigure());
+  /**
+   * The Periods this table asks for at its defaults, built the way the page
+   * builds them — computed rather than written down, for the reason THIS_YEAR
+   * gives.
+   */
+  const customerColumns = () =>
+    inZone("Asia/Colombo", () => {
+      const filters = defaultAppliedFilters(
+        MIS_PERIODS.ANNUALLY,
+        MIS_TABLES.SOFTWARE_CLOUD_CUSTOMERS,
+      );
+      const columnDateRanges = pacificColumnRanges(
+        MIS_PERIODS.ANNUALLY,
+        MIS_WINDOWS.CALENDAR,
+        filters,
+      );
+      return customerColumnRanges(MIS_PERIODS.ANNUALLY, MIS_WINDOWS.CALENDAR, {
+        ...filters,
+        columnDateRanges,
+      });
+    });
 
-    expect(opportunities.asked).toMatchObject({ accountId: NORTHWIND.id });
-    // A real date, in the shape the endpoint wants — NOT recovered by running
-    // regexes over the column header the way the source does it.
-    expect(opportunities.asked?.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  /**
+   * Northwind's first figure under one Period, found the way a screen reader
+   * finds it: by the cell's `headers` naming that Period's column header.
+   */
+  const northwindFigureUnder = (periodLabel: string) => {
+    const period = screen.getByRole("columnheader", { name: periodLabel });
+    const row = screen.getByText("Northwind Bank").closest("tr")!;
+    const cell = within(row)
+      .getAllByRole("cell")
+      .find((one) => one.getAttribute("headers")?.split(" ").includes(period.id))!;
+    return within(cell).getByRole("button");
+  };
+
+  // §10.22a. Two Periods on screen, and each clicked in turn, because with one
+  // column "that column's date" and "a column's date" are the same claim — a
+  // dialog that always asked as at the newest Period, or the first, would pass.
+  // The date is the column's own closing date: NOT recovered by running regexes
+  // over the column header the way the source does it.
+  it("opens on a figure cell, and asks for that account as at that column", async () => {
+    const periods = customerColumns().slice(-2);
+    customers.value = {
+      ...customerBook([]),
+      columns: periods.map((range) => ({
+        label: buildColumnLabel(range),
+        accounts: [NORTHWIND] as never,
+        isError: false,
+      })),
+    };
+
+    for (const range of periods) {
+      cleanup();
+      opportunities.asked = null;
+      renderPage("?table=customers");
+      await userEvent.click(northwindFigureUnder(buildColumnLabel(range)));
+
+      expect(opportunities.asked, `opened under ${buildColumnLabel(range)}`).toEqual({
+        accountId: NORTHWIND.id,
+        // `yyyy-MM-dd`, the shape the endpoint wants.
+        endDate: range.end.replace(/\//g, "-"),
+      });
+    }
   });
 
   it("shows the opportunities for the account that was opened", async () => {
