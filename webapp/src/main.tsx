@@ -27,6 +27,14 @@ import "@fontsource-variable/inter/index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import AppWithConfig from "./AppWithConfig";
+import {
+  installMisFixtureFetch,
+  misFixtureModeEnabled,
+} from "@features/finance/mis/prototype/misFixtureFetch";
+
+// PROTOTYPE (prototype/mis-look): dev-only fixture mode for the MIS screens,
+// keyed on the placeholder backend URL. Never reached in a production bundle.
+if (misFixtureModeEnabled()) installMisFixtureFetch();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

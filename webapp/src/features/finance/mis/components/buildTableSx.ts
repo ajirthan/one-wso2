@@ -118,14 +118,21 @@ export const rowSx = ({
   emphasis,
   ruleAbove,
   tint,
+  emphasisFill = true,
 }: {
   emphasis?: boolean;
   ruleAbove?: boolean;
   /** The theme's hover fill. Also the resting fill of a balance row. */
   tint: string;
+  /**
+   * PROTOTYPE (prototype/mis-look): whether a balance row RESTS on the tint.
+   * The source's `.bold-row` is weight alone — no fill — so the faithful look
+   * turns this off and keeps the hover layer.
+   */
+  emphasisFill?: boolean;
 }) => {
   const resting = {
-    ...(emphasis ? { fontWeight: 700, ...opaqueTint(tint) } : {}),
+    ...(emphasis ? { fontWeight: 700, ...(emphasisFill ? opaqueTint(tint) : {}) } : {}),
     /** The rule an accountant draws above a total. */
     ...(ruleAbove ? { borderTop: "2px solid", borderTopColor: "text.secondary" } : {}),
   };
@@ -134,7 +141,7 @@ export const rowSx = ({
     // Two layers on a row that already wears one, so the pointer always
     // deepens the row rather than repainting it. `:hover` outranks the resting
     // rule on specificity, so order here is not what decides it.
-    [HOVER_CELLS]: emphasis ? opaqueTint(tint, tint) : opaqueTint(tint),
+    [HOVER_CELLS]: emphasis && emphasisFill ? opaqueTint(tint, tint) : opaqueTint(tint),
   };
 };
 

@@ -38,6 +38,8 @@ import {
 import { MIS_VALUE_TYPES, amountUnitCaption, formatMisValue } from "../util/misMoney";
 import type { MisScale } from "../util/misViewVocabulary";
 import type { OpportunitiesState } from "../api/useOpportunities";
+import PrototypeExportMenu from "../prototype/PrototypeExportMenu";
+import { misExportFilename } from "../export/misExportFilename";
 
 // The opportunities behind one account on the Software/Cloud Customers table.
 //
@@ -134,9 +136,14 @@ export default function MisOpportunities({
               </Typography>
               {/* The caption travels with the table, so a figure cropped into a
                   deck carries its units — see `amountUnitCaption`. */}
-              <Typography variant="caption" color="text.secondary">
-                {amountUnitCaption(scale)}
-              </Typography>
+              <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {amountUnitCaption(scale)}
+                </Typography>
+                {/* PROTOTYPE, D8: the sixth export point. No workbook builder
+                    exists for this table yet, so the menu alone. */}
+                <PrototypeExportMenu filename={() => misExportFilename(["opportunities", account?.id ?? ""])} />
+              </Stack>
             </Stack>
             <BuildTable
               // Names the table for assistive tech, the way the drill-down

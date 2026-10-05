@@ -24,7 +24,6 @@ import { ScalePreferenceProvider } from "../util/ScalePreferenceContext";
 import { YearsBackSessionProvider, useYearsBackSession } from "../util/YearsBackSessionContext";
 import { filtersAfterSwitch } from "../util/misFilterBarModel";
 import { MIS_PERIODS, MIS_TABLES, type MisTable } from "../util/misViewVocabulary";
-import { useMisScale } from "../util/useMisScale";
 import { useMisViewState } from "../util/useMisViewState";
 import MisFilterBar from "./MisFilterBar";
 
@@ -75,7 +74,6 @@ function Address() {
 
 function Harness({ optionsErrorMessage = "" }: { optionsErrorMessage?: string }) {
   const view = useMisViewState(MIS_PERIODS.ANNUALLY);
-  const scale = useMisScale(view);
   const session = useYearsBackSession();
   // Standing in for the Table tabs the page renders above the bar, which is
   // where a switch actually comes from. What it does is the page's own line
@@ -89,7 +87,6 @@ function Harness({ optionsErrorMessage = "" }: { optionsErrorMessage?: string })
     <>
       <MisFilterBar
         view={view}
-        scale={scale}
         options={OPTIONS}
         optionsErrorMessage={optionsErrorMessage}
       />

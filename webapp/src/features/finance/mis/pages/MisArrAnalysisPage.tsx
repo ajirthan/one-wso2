@@ -16,13 +16,26 @@
 
 import { useMemo, useState } from "react";
 import { Navigate } from "react-router";
-import { Box, Card, Checkbox, FormControlLabel, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
+import { Box, Typography } from "@wso2/oxygen-ui";
 import { useDocumentTitle } from "@hooks/useDocumentTitle";
 import ErrorNotice from "@components/error-notice/ErrorNotice";
 import { misPaths } from "@constants/misApps";
 import MisShell from "../components/MisShell";
 import MisAnalysisFilters from "../components/MisAnalysisFilters";
 import AnalysisAccountGrid from "../components/AnalysisAccountGrid";
+import { MisLookPrototypeProvider } from "../prototype/misLookPrototype";
+import {
+  PrototypeIndustryBars,
+  PrototypeKpiTiles,
+  PrototypePartnerPie,
+} from "../prototype/PrototypeAnalysisCharts";
+import PrototypeGridHeader from "../prototype/PrototypeGridHeader";
+import PrototypeExportMenu from "../prototype/PrototypeExportMenu";
+
+// PROTOTYPE (branch prototype/mis-look): D11 anatomy — KPI tiles with the ARR
+// figure in brand text and a Logo Count, a Partner Type pie, vertical Industry
+// bars with share labels, then the accounts grid under a per-grid header with
+// the Scale and an Export ▾. Three chrome variants via `?variant=`.
 import {
   analysisScrapedOptions,
   mergeScrapedOptions,
@@ -35,8 +48,6 @@ import {
   useAnalysisIndustries,
   useAnalysisPartnerModels,
 } from "../api/useAnalysisBreakdowns";
-import AnalysisPartnerModelChart from "../components/AnalysisPartnerModelChart";
-import AnalysisIndustryChart from "../components/AnalysisIndustryChart";
 import { useDebouncedValue } from "../util/useDebouncedValue";
 import { analysisMenus } from "../util/misAnalysisMenus";
 import {
@@ -45,15 +56,9 @@ import {
   isSameCivilDate,
   type MisAnalysisFilters as Filters,
 } from "../util/misAnalysisFilters";
-import { pacificCivilDate, type MisCivilDate } from "../util/misPacificTime";
-import {
-  MIS_VALUE_TYPES,
-  amountUnitCaption,
-  formatMisValue,
-  misHeadlineAmount,
-} from "../util/misMoney";
+import { pacificCivilDate } from "../util/misPacificTime";
 import { useScalePreference } from "../util/ScalePreferenceContext";
-import { MIS_SCALES, type MisScale } from "../util/misViewVocabulary";
+import { misExportFilename } from "../export/misExportFilename";
 
 // ARR Analysis — current ARR over an account-level table, behind a server-side
 // flag.
@@ -111,7 +116,9 @@ export default function MisArrAnalysisPage() {
         describe: "whether ARR Analysis is available",
       }}
     >
-      <ArrAnalysis />
+      <MisLookPrototypeProvider>
+        <ArrAnalysis />
+      </MisLookPrototypeProvider>
     </MisShell>
   );
 }
@@ -178,17 +185,17 @@ function ArrAnalysis() {
         onChange={setFilters}
       />
 
-      <SummaryCards
-        asOf={settled.asOf}
-        today={today}
+      <PrototypeKpiTiles
+        asOfLabel={
+          settled.asOf && !isSameCivilDate(settled.asOf, today) ? isoCivilDate(settled.asOf) : "today"
+        }
         arr={headline.arr}
         isLoading={headline.isLoading}
         isError={headline.isError}
         errorMessage={headline.errorMessage}
         retry={headline.retry}
-        accountCount={accounts.rows.length}
-        accountsLoading={accounts.isLoading}
-        scale={scale}
+        logoCount={accounts.rows.length}
+        logosLoading={accounts.isLoading}
       />
 
       {/* Always mounted, so the region exists before it has anything to say —
@@ -212,53 +219,30 @@ function ArrAnalysis() {
       </Typography>
 
       {/* The two breakdowns, above the table they are cut from. Each ships a
-          companion table beneath it, per the house convention — a chart alone is
-          not an accessible presentation of a number someone has to act on. */}
+          companion table beneath it, per the house convention. */}
       <Box
         sx={{
           display: "grid",
-          gap: 1.5,
-          mb: 1.5,
+          gap: 2,
+          mb: 2,
           gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 0.8fr) minmax(0, 1.2fr)" },
         }}
       >
-        <AnalysisPartnerModelChart breakdown={partnerModels} scale={scale} />
-        <AnalysisIndustryChart
-          breakdown={industries}
-          totalArr={headline.arr}
-          scale={scale}
-        />
+        <PrototypePartnerPie breakdown={partnerModels} scale={scale} />
+        <PrototypeIndustryBars breakdown={industries} totalArr={headline.arr} scale={scale} />
       </Box>
 
-      <Stack
-        direction="row"
-        sx={{ alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", mb: 0.75 }}
-      >
-        <Typography variant="subtitle2">Account performance detail</Typography>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
-          {/* The caption travels with the TABLE rather than with the control,
-              because Finance's workflow is to crop a table into a deck — see
-              `amountUnitCaption`. */}
-          <Typography variant="caption" color="text.secondary">
-            {amountUnitCaption(scale)}
-          </Typography>
-          {/* The same label and the same preference as the Build's bar, so
-              switching screens does not switch units under the reader. */}
-          <FormControlLabel
-            sx={{ m: 0 }}
-            control={
-              <Checkbox
-                size="small"
-                checked={scale === MIS_SCALES.THOUSANDS}
-                onChange={(event) =>
-                  setScale(event.target.checked ? MIS_SCALES.THOUSANDS : MIS_SCALES.UNITS)
-                }
-              />
-            }
-            label={<Typography variant="body2">Values in &apos;000</Typography>}
-          />
-        </Stack>
-      </Stack>
+      {/* D4 step 5 on this screen too: the Table title, the units caption, the
+          Scale and the Export ▾ travel with the table, because Finance crops
+          tables into decks. */}
+      <PrototypeGridHeader
+        title="Account performance detail"
+        scale={scale}
+        onScale={setScale}
+        exportMenu={
+          <PrototypeExportMenu filename={() => misExportFilename(["arr_analysis", "accounts"])} />
+        }
+      />
 
       {accounts.isError ? (
         <ErrorNotice onRetry={accounts.retry} sx={{ mt: 1.5 }}>
@@ -267,95 +251,6 @@ function ArrAnalysis() {
       ) : (
         <AnalysisAccountGrid rows={accounts.rows} scale={scale} isLoading={accounts.isLoading} />
       )}
-    </Box>
-  );
-}
-
-/**
- * The two figures above the table: total ARR, and how many accounts are behind
- * it.
- *
- * The logo count is the number of rows on screen, so it always matches the
- * table beneath it.
- */
-function SummaryCards({
-  asOf,
-  today,
-  arr,
-  isLoading,
-  isError,
-  errorMessage,
-  retry,
-  accountCount,
-  accountsLoading,
-  scale,
-}: {
-  asOf: Filters["asOf"];
-  today: MisCivilDate;
-  arr?: number;
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage: string;
-  retry: () => void;
-  accountCount: number;
-  accountsLoading: boolean;
-  scale: MisScale;
-}) {
-  const on = asOf ?? today;
-  const label = isSameCivilDate(on, today) ? "today" : isoCivilDate(on);
-
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gap: 1.5,
-        mb: 1.5,
-        gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
-        maxWidth: 640,
-      }}
-    >
-      {/* Not Oxygen's StatCard. The ARR tile replaces its figure with an
-          error that offers a retry, or with a skeleton, and StatCard only
-          takes a label and a value. The Accounts tile beside it stays in the
-          same shape. */}
-      <Card variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="overline" color="text.secondary">
-          ARR as of {label}
-        </Typography>
-        {isError ? (
-          <ErrorNotice onRetry={retry} sx={{ mt: 1 }}>
-            Couldn&apos;t load this figure. {errorMessage}
-          </ErrorNotice>
-        ) : isLoading ? (
-          <Skeleton variant="text" width={160} height={44} />
-        ) : (
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {/* A HEADLINE, so it is compact, in dollars, and NOT scaled —
-                `misHeadlineAmount` has no Scale parameter to break it with. An
-                em dash rather than a zero when the figure never arrived: `$0`
-                would state something. */}
-            {arr == null ? "—" : misHeadlineAmount(arr)}
-          </Typography>
-        )}
-      </Card>
-
-      <Card variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="overline" color="text.secondary">
-          Accounts
-        </Typography>
-        {accountsLoading ? (
-          <Skeleton variant="text" width={80} height={44} />
-        ) : (
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {/* The reader's Scale IS handed over here, and makes no
-                difference: `formatMisValue` reads it in the currency branch
-                and nowhere else, so a count cannot be divided by a thousand
-                however it is called. That is why this component still takes
-                `scale` now that the figure above is a headline. */}
-            {formatMisValue(accountCount, MIS_VALUE_TYPES.COUNT, { scale })}
-          </Typography>
-        )}
-      </Card>
     </Box>
   );
 }
