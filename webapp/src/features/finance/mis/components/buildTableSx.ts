@@ -36,7 +36,8 @@
 export const ROW_LABEL_WIDTH = 288;
 
 /** How tall the body grows before it scrolls under the header. */
-export const MAX_BODY_HEIGHT = 560;
+// PROTOTYPE (prototype/mis-look): taller, so a full Build fits one screenshot.
+export const MAX_BODY_HEIGHT = 900;
 
 /**
  * The stacking order, top to bottom.
@@ -69,8 +70,16 @@ export const Z = {
  * colour and change nothing — see `rowSx`.
  */
 export const opaqueTint = (...tints: readonly string[]) => ({
-  backgroundColor: "background.paper",
-  backgroundImage: tints.map((tint) => `linear-gradient(${tint}, ${tint})`).join(", "),
+  // PROTOTYPE (prototype/mis-look) finding: Oxygen's `background.paper` is
+  // TRANSLUCENT (`#ffffffc5` light, `#00000026` dark), so a frozen cell resting
+  // on it lets the columns scrolling behind show through — the smear the
+  // handoff asked about, reproduced on the Customers table. The opaque base is
+  // `background.default`, with paper composited over it as the bottom layer, so
+  // every cell reads as the paper colour and stays opaque.
+  backgroundColor: "background.default",
+  backgroundImage: [...tints, "var(--oxygen-palette-background-paper)"]
+    .map((tint) => `linear-gradient(${tint}, ${tint})`)
+    .join(", "),
 });
 
 /**
@@ -158,8 +167,9 @@ const cellBase = {
   borderBottom: 1,
   borderColor: "divider",
   // Opaque, not translucent: rows scroll underneath the header and the Period
-  // columns scroll behind the row labels.
-  backgroundColor: "background.paper",
+  // columns scroll behind the row labels. See `opaqueTint` for why this is no
+  // longer a bare `background.paper`.
+  ...opaqueTint(),
 } as const;
 
 /** A header cell, in either of the two header rows. */
@@ -198,6 +208,9 @@ export const ROW_LABEL_CELL_SX = {
   py: 0.15,
   px: 1,
   borderRight: 1,
+  // PROTOTYPE finding: the `borderRight` shorthand resets the side's colour to
+  // currentColor, so without this the frozen column's rule paints white in dark.
+  borderRightColor: "divider",
 } as const;
 
 /**
@@ -242,6 +255,7 @@ export const leadHeadCellSx = (offset: number | undefined) => ({
   textAlign: "left" as const,
   color: "text.primary",
   borderRight: 1,
+  borderRightColor: "divider",
   ...frozenAt(offset, Z.headerCorner, { left: "auto" as const, zIndex: Z.header }),
 });
 

@@ -188,8 +188,11 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
   const theme = useTheme();
   const look = useMisLook();
   const faithful = look.gridSurface === "faithful";
-  const isGrandTotal = (key: string) =>
-    Boolean(look.grandTotalGradient && grandTotalKeys?.has(key));
+  // The Customers table's Total column: the source's `.total-cell` is weight 600
+  // and nothing more; the orange gradient is dead CSS there, kept here behind
+  // a flag — see `MisLook.grandTotalGradient`.
+  const grandTotalSx = (key: string) =>
+    !grandTotalKeys?.has(key) ? {} : look.grandTotalGradient ? grandTotalCellSx : { fontWeight: 600 };
   const ids = buildTableIds(useId());
   const [periodRowRef, periodRowHeight] = useHeaderRowHeight();
 
@@ -357,7 +360,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                         fontSize: 10,
                         ...(subIndex === 0 ? groupEdgeSx(groupIndex) : {}),
                         ...(faithful ? { ...faithfulHeadCellSx, fontSize: "0.75rem", whiteSpace: "normal", lineHeight: 1.25 } : {}),
-                        ...(isGrandTotal(subColumn.key) ? grandTotalCellSx : {}),
+                        ...grandTotalSx(subColumn.key),
                       }}
                     >
                       {subColumn.label}
@@ -494,7 +497,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                             // no `error.main`. Source parity; Finance asked for
                             // the same visual.
                             ...(figure.muted ? { color: "text.secondary" } : {}),
-                            ...(isGrandTotal(subColumn.key) ? grandTotalCellSx : {}),
+                            ...grandTotalSx(subColumn.key),
                           }}
                         >
                           {figure.onActivate ? (

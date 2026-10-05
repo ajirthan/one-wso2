@@ -406,7 +406,11 @@ function Unavailable({ on, children }: { on: string; children: ReactElement }) {
           receives no pointer events either, which is the thing being worked
           around. It becomes the flex item in the control row, so it carries the
           control's width. */}
-      <Box component="span" tabIndex={0} sx={{ ...CONTROL_WIDTH, display: "inline-flex" }}>
+      <Box
+        component="span"
+        tabIndex={0}
+        sx={{ ...CONTROL_WIDTH, display: "flex", width: "100%", "& > *": { width: "100%" } }}
+      >
         {children}
       </Box>
     </Tooltip>

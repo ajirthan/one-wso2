@@ -41,7 +41,14 @@ export interface MisLook {
   gridHeader: "brand" | "oxygen";
   /** The table itself: header, section rows, hover, totals. */
   gridSurface: "faithful" | "oxygen";
-  /** Whether the Customers table's Total column wears the orange gradient. */
+  /**
+   * Whether the Customers table's Total column wears the orange gradient.
+   *
+   * FINDING: off in every variant. The handoff read the gradient off
+   * `DataGrid.css` (`.grand-total-cell`), but no source column ever applies that
+   * class — the rendered Total column is `.total-cell`: weight 600, slate text.
+   * Kept behind `&gradient=1` so Finance can still see the option side by side.
+   */
   grandTotalGradient: boolean;
 }
 
@@ -57,7 +64,7 @@ export const MIS_LOOKS: Readonly<Record<MisLookKey, MisLook>> = {
     filterButtons: "faithful",
     gridHeader: "brand",
     gridSurface: "faithful",
-    grandTotalGradient: true,
+    grandTotalGradient: false,
   },
   B: {
     key: "B",
@@ -137,7 +144,9 @@ export function MisLookPrototypeProvider({ children }: { children: ReactNode }) 
     );
   };
 
-  const look = MIS_LOOKS[key];
+  const base = MIS_LOOKS[key];
+  // The dead-CSS gradient, on request only — see `grandTotalGradient`.
+  const look = params.get("gradient") === "1" ? { ...base, grandTotalGradient: true } : base;
   return (
     <MisLookContext.Provider value={look}>
       {children}

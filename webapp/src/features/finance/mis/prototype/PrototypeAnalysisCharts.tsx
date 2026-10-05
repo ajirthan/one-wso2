@@ -37,6 +37,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useColorScheme,
   useTheme,
 } from "@wso2/oxygen-ui";
 import { TrendingUpIcon } from "@wso2/oxygen-ui-icons-react";
@@ -48,6 +49,19 @@ import { industrySeries, partnerModelSlices, type PartnerModelSlice } from "../c
 import type { IndustryBreakdown, PartnerModelBreakdown } from "../api/useAnalysisBreakdowns";
 import { useMisLook } from "./misLookPrototype";
 import { brandText, cssVar, primaryTint } from "./misLookTokens";
+
+/**
+ * The LIVE colour scheme. FINDING: under Oxygen's CSS-variables theme
+ * `theme.palette.mode` always reports the default scheme ("light"), so a chart
+ * that keys its tick colours off it paints light-mode chrome on a dark page —
+ * which is what the port's Analysis charts do today. `useColorScheme` is the
+ * resolved answer, "system" included.
+ */
+function useLiveMode(): "light" | "dark" {
+  const { mode, systemMode } = useColorScheme();
+  const resolved = mode === "system" ? systemMode : mode;
+  return resolved === "dark" ? "dark" : "light";
+}
 
 // ---- the card every piece sits in --------------------------------------------
 
@@ -188,7 +202,7 @@ export function PrototypeKpiTiles({
 export function PrototypePartnerPie({ breakdown, scale }: { breakdown: PartnerModelBreakdown; scale: MisScale }) {
   const look = useMisLook();
   const theme = useTheme();
-  const mode = theme.palette.mode === "dark" ? "dark" : "light";
+  const mode = useLiveMode();
   const faithful = look.gridHeader === "brand";
 
   const slices = partnerModelSlices({ channel: breakdown.channel, direct: breakdown.direct, asked: breakdown.asked });
@@ -250,11 +264,20 @@ export function PrototypePartnerPie({ breakdown, scale }: { breakdown: PartnerMo
                 cornerRadius={faithful ? 7 : 2}
                 isAnimationActive={false}
                 stroke="none"
-                label={({ value, x, y }) => (
-                  <text x={x} y={y} fill={cssVar("text-primary")} fontSize={12} fontWeight={700} textAnchor="middle" dominantBaseline="central">
-                    {`${Math.round(Number(value))}%`}
-                  </text>
-                )}
+                // The source's arc labels: inside the slice, white, 11px/700,
+                // and only on a slice wide enough to hold them (arcLabelMinAngle 20°).
+                label={({ value, cx, cy, midAngle, outerRadius, percent }) => {
+                  if ((percent ?? 0) * 360 < 20) return null;
+                  const radian = (-(midAngle ?? 0) * Math.PI) / 180;
+                  const r = Number(outerRadius) * 0.6;
+                  const x = Number(cx) + r * Math.cos(radian);
+                  const y = Number(cy) + r * Math.sin(radian);
+                  return (
+                    <text x={x} y={y} fill="#ffffff" fontSize={12} fontWeight={700} textAnchor="middle" dominantBaseline="central">
+                      {`${Math.round(Number(value))}%`}
+                    </text>
+                  );
+                }}
                 labelLine={false}
               >
                 {slices.map((slice) => (
@@ -264,8 +287,8 @@ export function PrototypePartnerPie({ breakdown, scale }: { breakdown: PartnerMo
               <RTooltip
                 formatter={(value, name) => [`${Number(value).toFixed(1)}%`, String(name)]}
                 contentStyle={{
-                  background: theme.palette.background.paper,
-                  border: `1px solid ${theme.palette.divider}`,
+                  background: cssVar("background-default"),
+                  border: `1px solid ${cssVar("divider")}`,
                   borderRadius: 6,
                   fontSize: 12,
                 }}
@@ -331,7 +354,7 @@ export function PrototypeIndustryBars({
 }) {
   const look = useMisLook();
   const theme = useTheme();
-  const mode = theme.palette.mode === "dark" ? "dark" : "light";
+  const mode = useLiveMode();
   const chrome = chartChrome(mode);
   const faithful = look.gridHeader === "brand";
   const fill = faithful ? theme.palette.primary.main : seriesColor(CHART_SERIES_1, mode);
@@ -368,7 +391,7 @@ export function PrototypeIndustryBars({
       ) : (
         <Box sx={{ height: CHART_HEIGHT }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={plotted} margin={{ top: 18, right: 12, bottom: 4, left: 8 }} barCategoryGap="42%">
+            <BarChart data={plotted} margin={{ top: 18, right: 12, bottom: 4, left: 8 }} barCategoryGap="30%" maxBarSize={64}>
               <CartesianGrid vertical={false} stroke={chrome.line} />
               <XAxis
                 dataKey="industry"
@@ -389,8 +412,8 @@ export function PrototypeIndustryBars({
                 cursor={{ fill: chrome.line }}
                 formatter={(value) => [misHeadlineAmount(Number(value)), "ARR"]}
                 contentStyle={{
-                  background: theme.palette.background.paper,
-                  border: `1px solid ${theme.palette.divider}`,
+                  background: cssVar("background-default"),
+                  border: `1px solid ${cssVar("divider")}`,
                   borderRadius: 6,
                   fontSize: 12,
                 }}
