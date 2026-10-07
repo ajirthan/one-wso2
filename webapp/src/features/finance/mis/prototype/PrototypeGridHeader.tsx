@@ -6,17 +6,20 @@
 // because it survives a crop into a slide (D10). Scale leaves the filter area
 // and lives beside the figures it rewrites (D4).
 //
-//   A, C  the source's `.data-grid-header`: white bar, bottom rule, 1.375rem
-//         title in brand text, primary Switch for the Scale, brand-text
-//         checkbox labels, filled Export
+//   A, C  the source's `.data-grid-header`, measured on mis-stg 2026-10-07: the
+//         head of the grid card (1px border, 4px radius), 24px/600 title in
+//         brand text, 12px/500 caption, a primary CHECKBOX for the Scale (not a
+//         Switch — the handoff read `.thousands-toggle` off the CSS; the live
+//         control is a MUI Checkbox), primary checkboxes with slate 500 labels
+//         for BU only / Totals only, filled Export
 //   B     Oxygen: subtitle1 title, Checkbox for the Scale, contained Export
 
 import type { ReactNode } from "react";
-import { Box, Checkbox, FormControlLabel, Stack, Switch, Typography } from "@wso2/oxygen-ui";
+import { Box, Checkbox, FormControlLabel, Stack, Typography } from "@wso2/oxygen-ui";
 import { MIS_SCALES, type MisScale } from "../util/misViewVocabulary";
 import { amountUnitCaption } from "../util/misMoney";
 import { useMisLook } from "./misLookPrototype";
-import { brandText, gridHeaderBarSx, gridTitleSx } from "./misLookTokens";
+import { gridCaptionSx, gridHeaderBarSx, gridTitleSx, slateText } from "./misLookTokens";
 
 export interface GridToggle {
   label: string;
@@ -86,10 +89,10 @@ export default function PrototypeGridHeader({
   }
 
   return (
-    <Box sx={gridHeaderBarSx}>
+    <Box sx={[gridHeaderBarSx]}>
       <Box sx={{ minWidth: 0 }}>
         <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-          <Typography component="h3" sx={gridTitleSx}>
+          <Typography component="h3" sx={[gridTitleSx]}>
             {title}
           </Typography>
           {note && (
@@ -98,18 +101,14 @@ export default function PrototypeGridHeader({
             </Typography>
           )}
         </Stack>
-        <Typography variant="caption" sx={{ display: "block", mt: "2px", color: "text.secondary", fontWeight: 500 }}>
+        <Typography variant="caption" sx={[gridCaptionSx]}>
           {amountUnitCaption(scale)}
         </Typography>
       </Box>
-      <Stack direction="row" sx={{ alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-        {/* The source's `.thousands-toggle`: a primary Switch with a 500 label. */}
-        <FormControlLabel
-          sx={{ m: 0, "& .MuiFormControlLabel-label": { fontSize: "0.875rem", fontWeight: 500, ml: 0.5 } }}
-          control={<Switch size="small" color="primary" checked={thousands} onChange={(event) => setThousands(event.target.checked)} />}
-          label="Values in '000"
-        />
-        {toggles.map((toggle) => (
+      {/* Measured: the controls sit on the title's baseline row, 14px/500 slate
+          labels, primary checkboxes, the Export at the end. */}
+      <Stack direction="row" sx={{ alignItems: "center", gap: 2, flexWrap: "wrap", pt: "4px" }}>
+        {[{ label: "Values in '000", checked: thousands, onChange: setThousands }, ...toggles].map((toggle) => (
           <FormControlLabel
             key={toggle.label}
             sx={{ m: 0 }}
@@ -118,11 +117,11 @@ export default function PrototypeGridHeader({
                 size="small"
                 checked={toggle.checked}
                 onChange={(event) => toggle.onChange(event.target.checked)}
-                sx={{ color: "primary.main", "&.Mui-checked": { color: "primary.main" } }}
+                sx={{ p: 0.5, color: "primary.main", "&.Mui-checked": { color: "primary.main" } }}
               />
             }
             label={
-              <Typography component="span" sx={[{ fontSize: "0.875rem", fontWeight: 500, ml: 0.5 }, brandText]}>
+              <Typography component="span" sx={[{ fontSize: "0.875rem", fontWeight: 500, ml: 0.5 }, slateText]}>
                 {toggle.label}
               </Typography>
             }

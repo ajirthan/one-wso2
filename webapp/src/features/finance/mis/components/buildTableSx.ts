@@ -128,6 +128,8 @@ export const rowSx = ({
   ruleAbove,
   tint,
   emphasisFill = true,
+  emphasisWeight = 700,
+  emphasisFontSize,
 }: {
   emphasis?: boolean;
   ruleAbove?: boolean;
@@ -139,9 +141,22 @@ export const rowSx = ({
    * turns this off and keeps the hover layer.
    */
   emphasisFill?: boolean;
+  /**
+   * PROTOTYPE: the weight a balance row carries. Measured on the source:
+   * a Build's `.bold-row` is 600; the Customers `Total` row is 700 at 16px;
+   * a Region Summary total is 700.
+   */
+  emphasisWeight?: number;
+  emphasisFontSize?: string;
 }) => {
   const resting = {
-    ...(emphasis ? { fontWeight: 700, ...(emphasisFill ? opaqueTint(tint) : {}) } : {}),
+    ...(emphasis
+      ? {
+          fontWeight: emphasisWeight,
+          ...(emphasisFontSize ? { fontSize: emphasisFontSize } : {}),
+          ...(emphasisFill ? opaqueTint(tint) : {}),
+        }
+      : {}),
     /** The rule an accountant draws above a total. */
     ...(ruleAbove ? { borderTop: "2px solid", borderTopColor: "text.secondary" } : {}),
   };

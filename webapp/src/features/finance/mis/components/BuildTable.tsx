@@ -60,16 +60,20 @@ import {
   faithfulRowLabelSx,
   grandTotalCellSx,
   primaryTint,
+  sectionCellSx,
   sectionLabelSx,
-  slateFill,
 } from "../prototype/misLookTokens";
 
 // PROTOTYPE (branch prototype/mis-look): the table reads the variant through
 // `useMisLook()`. The FAITHFUL surface (A) is the source's AG Grid quartz look
-// in tokens — white header without uppercase, slate section rows, light primary
-// hover, bold totals with the 2px rule, and the orange gradient on a grand
-// total column; the OXYGEN surface (B, C) is what the port renders today.
-// Negatives are sign-only in every variant (D14).
+// in tokens, re-measured on mis-stg on 2026-10-07 after Finance picked A and
+// said the tables were not there yet: ONE 48px header row when a Period has a
+// single sub-column (the "ARR" sub-row only exists with several), 42px rows,
+// every grid text in slate `#475569`, no vertical rules between figures, 44px
+// section bands with the label at the foot and no chevron or indent, bold
+// rows at 600 (no 2px rule above a Closing balance — the source has none), a
+// drill-down underline only on hover or focus. The OXYGEN surface (B, C) is
+// what the port renders today. Negatives are sign-only in every variant (D14).
 
 // The table every Build screen renders through.
 //
@@ -169,6 +173,21 @@ export interface BuildTableProps<L extends BuildLeadColumn = BuildLeadColumn> {
    * "Total" — painted in the orange gradient where the variant asks for it.
    */
   grandTotalKeys?: ReadonlySet<string>;
+  /**
+   * PROTOTYPE (faithful surface only): what an `emphasis` row weighs. The
+   * source is not uniform — a Build's bold rows are 600, the Customers `Total`
+   * row is 700 at 16px, a Region Summary total is 700 — so the table that knows
+   * which it is says so. Default: the Build's.
+   */
+  emphasisStyle?: { fontWeight?: number; fontSize?: string };
+  /**
+   * PROTOTYPE (faithful surface only): show ONE header row when each Period has
+   * a single sub-column. True on the Subscription Build, where the lone
+   * sub-column is the ARR type and the source prints the Period label alone;
+   * false on the Customers table, where the lone "Total" under Totals only is
+   * a real column the source keeps a second header row for.
+   */
+  collapseLoneSubHeader?: boolean;
 }
 
 export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>({
@@ -184,10 +203,17 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
   rowLabelWidth = ROW_LABEL_WIDTH,
   maxBodyHeight = MAX_BODY_HEIGHT,
   grandTotalKeys,
+  emphasisStyle,
+  collapseLoneSubHeader = false,
 }: BuildTableProps<L>) {
   const theme = useTheme();
   const look = useMisLook();
   const faithful = look.gridSurface === "faithful";
+  // The source shows the Period label alone when it has one sub-column under it
+  // (BU Build with one ARR type); the sub-header row only exists with several.
+  // Kept in the DOM but hidden so every figure's `headers` still resolves.
+  const singleHeaderRow =
+    faithful && collapseLoneSubHeader && subColumns.length === 1 && columnGroups.length > 0;
   // The Customers table's Total column: the source's `.total-cell` is weight 600
   // and nothing more; the orange gradient is dead CSS there, kept here behind
   // a flag — see `MisLook.grandTotalGradient`.
@@ -209,6 +235,31 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
   );
   const leadOffsets = useMemo(() => leadColumnOffsets(lead), [lead]);
   const leadWidth = lead.reduce((total, column) => total + column.width, 0);
+
+  // PROTOTYPE (faithful surface only). The source's AG Grid flexes its Period
+  // columns to fill the viewport, so a Totals-only Customers table scrolled to
+  // its end shows five wide Totals, not a sliver of Employee Count beside them.
+  // The frame is measured and each sub-column widened to its share of what the
+  // pinned columns leave. The notice above still compares the viewport against
+  // the UNWIDENED model width, so filling can never call a table "wider than
+  // your screen". Measured width is 0 until laid out; the defaults hold then.
+  const [frameRef, frameWidth] = useMeasuredValue<HTMLDivElement>(
+    (element) => element.clientWidth,
+    { enabled: faithful },
+  );
+  const pinnedWidth = lead.reduce(
+    (total, column) => total + (column.pinned ? column.width : 0),
+    0,
+  );
+  const periodCells = columnGroups.length * subColumns.length;
+  const fillWidth =
+    faithful && frameWidth > 0 && periodCells > 0
+      ? Math.floor((frameWidth - pinnedWidth) / periodCells)
+      : 0;
+  const sized = useMemo(
+    () => subColumns.map((column) => ({ ...column, width: Math.max(column.width, fillWidth) })),
+    [subColumns, fillWidth],
+  );
   /** The id heading one identity column. The first keeps the name it shipped with. */
   const leadHeaderId = (index: number) =>
     index === 0 ? ids.rowLabelHeader : ids.leadHeader(lead[index].key);
@@ -244,6 +295,8 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
   // notice compares the viewport against, which is why that notice lives here
   // rather than on the page: this is the only place the number exists.
   const minWidth = tableMinWidth(columnGroups.length, subColumns, leadWidth);
+  /** The width the table is DRAWN at: the model width, plus the faithful fill. */
+  const drawnMinWidth = tableMinWidth(columnGroups.length, sized, leadWidth);
 
   return (
     <>
@@ -251,8 +304,15 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
           that mounted this itself would show it over a loading skeleton, an
           error and an empty state too, none of which is a table wider than the
           screen. */}
-      <WideTableNotice tableMinWidth={minWidth} sx={{ mb: 1.25 }} />
+      {/* Faithful: inside the grid card, between its head and its body, where
+          the source keeps its own "Swipe to view more" hint — so the card reads
+          as one piece. Square corners, no gap. */}
+      <WideTableNotice
+        tableMinWidth={minWidth}
+        sx={faithful ? { mb: 0, borderRadius: 0, borderLeft: 1, borderRight: 1, borderColor: "divider" } : { mb: 1.25 }}
+      />
       <Box
+        ref={frameRef}
         sx={
           faithful
             ? faithfulGridFrameSx
@@ -279,7 +339,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
             // inline style rather than an sx value: a style that changes with the
             // data would otherwise mint an emotion class per column count. The
             // same rule holds for every measured or derived value below.
-            style={{ minWidth }}
+            style={{ minWidth: drawnMinWidth }}
             sx={{
               // stickyHeader forces this anyway. Stated so that the per-cell
               // borders throughout read as deliberate rather than as inherited
@@ -299,16 +359,14 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                     // drill-down dialog is all identity columns and no Periods,
                     // and a rowSpan over a row that does not exist is a lie the
                     // table algorithm has to resolve on its own.
-                    rowSpan={columnGroups.length && subColumns.length ? 2 : 1}
+                    rowSpan={columnGroups.length && subColumns.length && !singleHeaderRow ? 2 : 1}
                     scope="col"
                     style={{ width: column.width, minWidth: column.width }}
-                    sx={{
-                      ...leadHeadCellSx(leadOffsets[index]),
-                      // The source's "Summary" header: 1rem, left, no uppercase.
-                      ...(faithful
-                        ? { ...faithfulHeadCellSx, fontSize: index === 0 ? "0.9375rem" : "0.8125rem", color: "text.primary", verticalAlign: "bottom" }
-                        : {}),
-                    }}
+                    sx={[
+                      leadHeadCellSx(leadOffsets[index]),
+                      // The source's "Summary" header: 14px/700 slate, left, no uppercase.
+                      faithful ? faithfulHeadCellSx : {},
+                    ]}
                   >
                     {column.label}
                   </TableCell>
@@ -319,15 +377,22 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                     id={ids.groupHeader(group.key)}
                     colSpan={subColumns.length}
                     scope="colgroup"
-                    sx={{
-                      ...HEAD_CELL_SX,
-                      top: 0,
-                      zIndex: Z.header,
-                      textAlign: "center",
-                      color: "text.primary",
-                      ...groupEdgeSx(groupIndex),
-                      ...(faithful ? { ...faithfulHeadCellSx, color: "text.primary", textAlign: subColumns.length > 1 ? "center" : "right" } : {}),
-                    }}
+                    sx={[
+                      {
+                        ...HEAD_CELL_SX,
+                        top: 0,
+                        zIndex: Z.header,
+                        textAlign: "center",
+                        color: "text.primary",
+                        ...(faithful ? {} : groupEdgeSx(groupIndex)),
+                      },
+                      // A lone Period label sits right-aligned over its figures
+                      // and wraps to two lines, as the source's does; a label
+                      // over several sub-columns is centred.
+                      faithful
+                        ? (t) => ({ ...faithfulHeadCellSx(t), textAlign: subColumns.length > 1 ? "center" : "right" })
+                        : {},
+                    ]}
                   >
                     {group.label}
                   </TableCell>
@@ -341,9 +406,9 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                   tested, not just `subColumns` — row 2's cells are the product of
                   the two, so either being empty leaves it blank. */}
               {columnGroups.length > 0 && subColumns.length > 0 && (
-              <TableRow>
+              <TableRow sx={singleHeaderRow ? { display: "none" } : undefined}>
                 {columnGroups.map((group, groupIndex) =>
-                  subColumns.map((subColumn, subIndex) => (
+                  sized.map((subColumn, subIndex) => (
                     <TableCell
                       key={`${group.key}:${subColumn.key}`}
                       id={ids.subHeader(group.key, subColumn.key)}
@@ -353,15 +418,20 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                         width: subColumn.width,
                         minWidth: subColumn.width,
                       }}
-                      sx={{
-                        ...HEAD_CELL_SX,
-                        zIndex: Z.header,
-                        textAlign: "right",
-                        fontSize: 10,
-                        ...(subIndex === 0 ? groupEdgeSx(groupIndex) : {}),
-                        ...(faithful ? { ...faithfulHeadCellSx, fontSize: "0.75rem", whiteSpace: "normal", lineHeight: 1.25 } : {}),
-                        ...grandTotalSx(subColumn.key),
-                      }}
+                      sx={[
+                        {
+                          ...HEAD_CELL_SX,
+                          zIndex: Z.header,
+                          textAlign: "right",
+                          fontSize: 10,
+                          ...(subIndex === 0 && !faithful ? groupEdgeSx(groupIndex) : {}),
+                        },
+                        // The source centres a sub-column header ("Total",
+                        // "API Platform BU") under its Period, at the same
+                        // 14px/700 as the Period itself.
+                        faithful ? (t) => ({ ...faithfulHeadCellSx(t), textAlign: "center" }) : {},
+                        grandTotalSx(subColumn.key),
+                      ]}
                     >
                       {subColumn.label}
                     </TableCell>
@@ -385,11 +455,21 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                   // one line, so the only variation is the 2px rule above a total.
                   ref={index === 0 ? firstRowRef : undefined}
                   sx={[
-                    rowSx({ emphasis: row.emphasis, ruleAbove: row.ruleAbove, tint, emphasisFill: !faithful }),
-                    // The source's `.section-row`: a slate band naming the
-                    // metric group under it (ARR movement, Customers, …).
+                    rowSx({
+                      emphasis: row.emphasis,
+                      // The source draws no rule above a Closing balance; the
+                      // 2px stroke is the port's own and stays with its surface.
+                      ruleAbove: row.ruleAbove && !faithful,
+                      tint,
+                      emphasisFill: !faithful,
+                      emphasisWeight: faithful ? (emphasisStyle?.fontWeight ?? 600) : 700,
+                      emphasisFontSize: faithful ? emphasisStyle?.fontSize : undefined,
+                    }),
+                    // The source's `.section-row`: a 44px slate band naming the
+                    // metric group under it (ARR movement, Customers, …), the
+                    // label at its foot. The band does not react to the pointer.
                     faithful && depth === 0 && expandable
-                      ? (t) => ({ "& > th, & > td": slateFill(t), "&:hover > th, &:hover > td": slateFill(t) })
+                      ? (t) => ({ "& > th, & > td": sectionCellSx(t), "&:hover > th, &:hover > td": sectionCellSx(t) })
                       : {},
                   ]}
                 >
@@ -402,13 +482,16 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                       minWidth: lead[0].width,
                       maxWidth: lead[0].width,
                     }}
-                    sx={{ ...leadCellSx(leadOffsets[0]), ...(faithful ? faithfulRowLabelSx : {}) }}
+                    sx={[leadCellSx(leadOffsets[0]), faithful ? faithfulRowLabelSx : {}]}
                   >
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      style={{ paddingLeft: depth * 18 }}
+                      // The source does not indent a row under its section, and
+                      // its sections do not fold, so the faithful surface shows
+                      // neither the indent nor the chevron.
+                      style={{ paddingLeft: faithful ? 0 : depth * 18 }}
                     >
-                      {expandable ? (
+                      {faithful ? null : expandable ? (
                         <IconButton
                           size="small"
                           onClick={() => toggle(row.id)}
@@ -424,15 +507,18 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                       )}
                       <Typography
                         component="span"
-                        sx={{
-                          fontSize: faithful ? "0.875rem" : 12.5,
-                          lineHeight: 1.6,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          color: depth >= 2 ? "text.secondary" : "text.primary",
-                          ...(faithful && depth === 0 && expandable ? sectionLabelSx : {}),
-                        }}
+                        sx={[
+                          {
+                            fontSize: faithful ? "inherit" : 12.5,
+                            fontWeight: "inherit",
+                            lineHeight: faithful ? 1.25 : 1.6,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            color: faithful ? "inherit" : depth >= 2 ? "text.secondary" : "text.primary",
+                          },
+                          faithful && depth === 0 && expandable ? sectionLabelSx : {},
+                        ]}
                       >
                         {row.label}
                       </Typography>
@@ -456,7 +542,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                           minWidth: column.width,
                           maxWidth: column.width,
                         }}
-                        sx={{ ...leadCellSx(leadOffsets[index]), ...(faithful ? faithfulRowLabelSx : {}) }}
+                        sx={[leadCellSx(leadOffsets[index]), faithful ? faithfulRowLabelSx : {}]}
                       >
                         {/* The full value on the cell itself. Identity columns
                             truncate — every row is one line, because the row
@@ -467,8 +553,9 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                           component="span"
                           title={text}
                           sx={{
-                            fontSize: 12.5,
-                            lineHeight: 1.6,
+                            fontSize: faithful ? "inherit" : 12.5,
+                            fontWeight: "inherit",
+                            lineHeight: faithful ? 1.25 : 1.6,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -482,23 +569,27 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                   })}
 
                   {columnGroups.map((group, groupIndex) =>
-                    subColumns.map((subColumn, subIndex) => {
+                    sized.map((subColumn, subIndex) => {
                       const figure = cell(row, group, subColumn);
                       return (
                         <TableCell
                           key={`${group.key}:${subColumn.key}`}
                           headers={ids.cellHeaders(row.id, group.key, subColumn.key)}
                           style={{ width: subColumn.width, minWidth: subColumn.width }}
-                          sx={{
-                            ...NUMERIC_CELL_SX,
-                            ...(subIndex === 0 ? groupEdgeSx(groupIndex) : {}),
-                            ...(faithful ? faithfulNumericSx : {}),
-                            // D14: negatives carry their sign and nothing else —
-                            // no `error.main`. Source parity; Finance asked for
-                            // the same visual.
-                            ...(figure.muted ? { color: "text.secondary" } : {}),
-                            ...grandTotalSx(subColumn.key),
-                          }}
+                          sx={[
+                            {
+                              ...NUMERIC_CELL_SX,
+                              // The source has no rule between figures — only
+                              // the pinned column's, and the header's.
+                              ...(subIndex === 0 && !faithful ? groupEdgeSx(groupIndex) : {}),
+                              // D14: negatives carry their sign and nothing else —
+                              // no `error.main`. Source parity; Finance asked for
+                              // the same visual.
+                              ...(figure.muted && !faithful ? { color: "text.secondary" } : {}),
+                            },
+                            faithful ? faithfulNumericSx : {},
+                            grandTotalSx(subColumn.key),
+                          ]}
                         >
                           {figure.onActivate ? (
                             // A real button inside the cell, not a click handler
@@ -512,7 +603,11 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                               sx={{
                                 font: "inherit",
                                 color: "inherit",
-                                textDecoration: "underline",
+                                // The source shows nothing at rest (its
+                                // drill-down is a bare AG Grid cell click); the
+                                // faithful surface keeps the button and shows its
+                                // underline only to a pointer or the keyboard.
+                                textDecoration: faithful ? "none" : "underline",
                                 textDecorationStyle: "dotted",
                                 textUnderlineOffset: 3,
                                 borderRadius: 0.5,
@@ -521,6 +616,7 @@ export default function BuildTable<L extends BuildLeadColumn = BuildLeadColumn>(
                                 // so a column of numbers still reads as a column.
                                 justifyContent: "flex-end",
                                 width: "100%",
+                                "&:hover, &.Mui-focusVisible": { textDecoration: "underline" },
                               }}
                             >
                               {figure.text}

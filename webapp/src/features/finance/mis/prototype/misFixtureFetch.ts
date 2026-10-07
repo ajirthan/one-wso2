@@ -207,7 +207,13 @@ function arrSummary(body: Record<string, unknown>) {
   const transferredInCount = Math.round(newCustomers * 0.1);
   const transferredOutCount = Math.round(lostCustomers * 0.12);
 
-  const pct = (part: number, whole: number) => round((part / whole) * 100);
+  // The ARR backend sends every percentage as a STRING with one decimal and a
+  // "%" ("31046.4%"), and "N/A" where there is no prior Period to grow from —
+  // measured on mis-stg 2026-10-07; `valueFormat.js` passes strings through and
+  // the port's response types accept them. Fixtures say the same, so the
+  // figures on screen read as the source's do.
+  const pct = (part: number, whole: number) => `${((part / whole) * 100).toFixed(1)}%`;
+  const growth = (low: number, high: number) => (year <= 2022 ? "N/A" : `${between(random, low, high).toFixed(1)}%`);
 
   return {
     openingArr: round(opening),
@@ -218,13 +224,13 @@ function arrSummary(body: Record<string, unknown>) {
     transferredOut: round(transferredOut),
     lost: round(lost),
     endingArr: round(ending),
-    endingArrYoyGrowth: round(between(random, 14, 22)),
+    endingArrYoyGrowth: growth(14, 22),
     netNew: round(netNew),
-    netNewYoyGrowth: round(between(random, -6, 28)),
+    netNewYoyGrowth: growth(-6, 28),
     totalNewArr: round(totalNew),
-    totalNewArrYoyGrowth: round(between(random, 4, 19)),
+    totalNewArrYoyGrowth: growth(4, 19),
     totalChurnArr: round(totalChurn),
-    totalChurnArrYoyGrowth: round(between(random, -12, 9)),
+    totalChurnArrYoyGrowth: growth(-12, 9),
     grossDollarRetention: pct(opening + reductions + lost, opening),
     netDollarRetention: pct(opening + expansions + reductions + lost, opening),
     dollarRetentionLostOnly: pct(opening + lost, opening),

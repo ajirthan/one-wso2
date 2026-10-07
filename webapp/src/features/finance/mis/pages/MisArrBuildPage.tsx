@@ -238,8 +238,9 @@ function ArrBuild({ period }: { period: MisPeriod }) {
 
 /**
  * The Table title in the per-grid header — the source's words (`DataGrid.js`
- * `displayTitle`): "<unit> Build" on the Subscription Table, the Table's own
- * label elsewhere.
+ * `displayTitle`): "<unit> <category> Build" on the Subscription Table ("All BU
+ * Build", "API Platform Software Build" — its `PRODUCT_LABELS` carry the
+ * category), the Table's own label elsewhere.
  */
 function gridTitle(view: MisViewState): string {
   if (view.table !== MIS_TABLES.SUBSCRIPTION) return MIS_TABLE_LABELS[view.table];
@@ -247,7 +248,7 @@ function gridTitle(view: MisViewState): string {
   const category = unitCategoryOf(code);
   if (category === "Custom") return "Custom Build";
   const unit = MIS_UNITS_BY_CATEGORY[category].find((one) => one.code === code);
-  return unit ? `${unit.label} Build` : "Build";
+  return unit ? `${unit.label} ${category} Build` : "Build";
 }
 
 /**
@@ -433,6 +434,8 @@ function ArrBuildGrid({ view, scaleState }: { view: MisViewState; scaleState: Mi
       )}
       <BuildTable
         label="ARR Build — Subscription"
+        // Measured on the source: one header row when a Period has one ARR type.
+        collapseLoneSubHeader
         rowLabelHeader="Summary"
         columnGroups={columnGroups}
         subColumns={SUB_COLUMNS}
@@ -524,7 +527,15 @@ function CustomersGrid({ view, scaleState }: { view: MisViewState; scaleState: M
   const leadCell = (row: { id: string }, column: CustomerLeadColumn) =>
     customerIdentityText(row.id, accountById.get(row.id), column);
 
-  const columnGroups = book.columns.map(({ label }) => ({ key: label, label }));
+  // PROTOTYPE: the source heads a Customers Period "As of {end}" — a balance at
+  // a date, like the Exit ARR summaries — not "{opening} - {end}". Its
+  // `toAsOfAnnualLabel` splits the range label on " - " exactly as here; the
+  // real implementation should take the end off the range instead
+  // (`misPeriods.ts` already has the helper the Exit ARR tables use).
+  const columnGroups = book.columns.map(({ label }) => ({
+    key: label,
+    label: label.includes(" - ") ? `As of ${label.split(" - ")[1]}` : label,
+  }));
   const breakdown = buOnly ? CUSTOMER_BU_SUB_COLUMNS : CUSTOMER_SUB_COLUMNS;
   const breakdownByKey = buOnly ? CUSTOMER_BU_SUB_COLUMN_BY_KEY : CUSTOMER_SUB_COLUMN_BY_KEY;
   // Totals only keeps the column(s) whose label is a total — "Total" under BU
@@ -661,6 +672,8 @@ function CustomersGrid({ view, scaleState }: { view: MisViewState; scaleState: M
       )}
       <BuildTable
         label="ARR Dashboard — Customers"
+        // Measured on the source: the Total row is `.total-row-bold`, 16px/700.
+        emphasisStyle={{ fontWeight: 700, fontSize: "1rem" }}
         rowLabelHeader="Account Name"
         leadColumns={leadColumns}
         leadCell={leadCell}
@@ -822,6 +835,8 @@ function RegionExitGrid({
     >
       <BuildTable
         label="ARR Dashboard — Region Summary"
+        // Measured on the source: `.exit-region-bold-row .ag-cell` is 700.
+        emphasisStyle={{ fontWeight: 700 }}
         rowLabelHeader="Region"
         rowLabelWidth={REGION_LABEL_WIDTH}
         columnGroups={columnGroups}
@@ -921,6 +936,8 @@ function RegionMetricsGrid({
     >
       <BuildTable
         label={`ARR Dashboard — ${ALL_ARR_METRICS_LABEL}`}
+        // Measured on the source: `.region-metrics-total-row .ag-cell` is 700.
+        emphasisStyle={{ fontWeight: 700 }}
         rowLabelHeader="Region"
         rowLabelWidth={REGION_LABEL_WIDTH}
         columnGroups={columnGroups}

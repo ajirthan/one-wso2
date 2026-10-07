@@ -53,6 +53,39 @@ export const slateFill = (theme: Theme) => ({
   ...theme.applyStyles("light", { backgroundColor: cssVar("grey-50") }),
 });
 
+/**
+ * The source's table TEXT: every header, label and figure in a grid is
+ * `--secondary-600` `#475569` (measured on mis-stg 2026-10-07 — AG Grid's
+ * `--ag-foreground-color`), never the near-black body text. NO TOKEN: Oxygen's
+ * `text.secondary` equals `text.primary`, so the step is a literal in light and
+ * `grey.400` in dark, where the source has no answer.
+ */
+export const slateText = (theme: Theme) => ({
+  color: cssVar("grey-400"),
+  ...theme.applyStyles("light", { color: "#475569" }),
+});
+
+/** The units caption under a grid title: 12px/500 `#6b778c` (measured). NO TOKEN. */
+export const slateMutedText = (theme: Theme) => ({
+  color: cssVar("grey-500"),
+  ...theme.applyStyles("light", { color: "#6b778c" }),
+});
+
+/**
+ * The source's `--shadow-md`, the one shadow a grid card wears (measured on
+ * `.data-grid-container`). Dropped in dark, where a shadow on black is noise.
+ */
+export const cardShadow = (theme: Theme) => ({
+  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
+  ...theme.applyStyles("dark", { boxShadow: "none" }),
+});
+
+/**
+ * The grid's measured geometry (mis-stg, AG Grid Quartz at 14px, grid size 8):
+ * row 42px, header 48px, section band 44px, cell padding 16px.
+ */
+export const GRID = { rowHeight: 42, headerHeight: 48, sectionHeight: 44, cellPadX: "16px" } as const;
+
 /** The orange gradient the source paints a grand total with. */
 export const primaryGradient = `linear-gradient(135deg, ${cssVar("primary-main")}, ${cssVar("primary-dark")})`;
 
@@ -220,28 +253,49 @@ export const faithfulChipSx = (theme: Theme) => ({
 
 // ---- Per-grid header (DataGrid.css .data-grid-header) --------------------------
 
+/**
+ * The top of the ONE card the source puts a grid in (`.data-grid-container`:
+ * 1px `--border-light`, 4px radius, `--shadow-md`). The header is this card's
+ * head and the grid frame below is its body; the two meet on the header's
+ * bottom rule, so the shadow sits on the frame alone — a shadow on the header
+ * would fall across the grid's first rows.
+ */
 export const gridHeaderBarSx = (theme: Theme) => ({
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
-  flexWrap: "wrap",
+  alignItems: "flex-start",
+  // `as const`: csstype's FlexWrap is a closed union, so a widened `string`
+  // fails SxProps once `applyStyles` is spread in beside it.
+  flexWrap: "wrap" as const,
   gap: 1.5,
   px: 2,
-  py: 1,
+  pt: 1.5,
+  pb: 1.25,
   backgroundColor: cssVar("background-paper"),
-  borderBottom: "1px solid",
+  border: "1px solid",
+  borderBottom: 0,
   borderColor: cssVar("divider"),
-  boxShadow: theme.shadows[1],
+  borderRadius: `${RADIUS.sm} ${RADIUS.sm} 0 0`,
+  ...theme.applyStyles("dark", { backgroundColor: "rgba(255,255,255,0.03)" }),
 });
 
-/** The Table title: 1.375rem/400, -0.025em, brand text. */
+/** The Table title — measured: Inter 24px/600, -0.025em, line-height 1.6, brand text. */
 export const gridTitleSx = (theme: Theme) => ({
   m: 0,
-  fontSize: "1.375rem",
-  fontWeight: 400,
+  fontSize: "1.5rem",
+  fontWeight: 600,
   letterSpacing: "-0.025em",
-  lineHeight: 1.2,
+  lineHeight: 1.6,
   ...brandText(theme),
+});
+
+/** The units caption — measured: 12px/500, `#6b778c`. */
+export const gridCaptionSx = (theme: Theme) => ({
+  display: "block",
+  fontSize: "0.75rem",
+  fontWeight: 500,
+  lineHeight: 1.66,
+  ...slateMutedText(theme),
 });
 
 /** The source's Export: filled primary, uppercase 12px/600, 4px radius. */
@@ -249,61 +303,106 @@ export const faithfulExportSx = faithfulApplySx;
 
 // ---- The grid (DataGrid.css AG Grid quartz overrides) --------------------------
 
+/**
+ * The body of the grid card — see `gridHeaderBarSx`. Square top corners meet
+ * the header; the card's shadow lives here.
+ */
 export const faithfulGridFrameSx = (theme: Theme) => ({
   border: "1px solid",
   borderColor: cssVar("divider"),
-  borderRadius: RADIUS.sm,
+  borderRadius: `0 0 ${RADIUS.sm} ${RADIUS.sm}`,
   overflow: "hidden",
   backgroundColor: cssVar("background-paper"),
-  boxShadow: theme.shadows[3],
+  ...cardShadow(theme),
 });
 
-/** Header cell: white, 600, 0.875rem, no uppercase, light right rule. */
-export const faithfulHeadCellSx = {
-  fontSize: "0.8125rem",
-  fontWeight: 600,
+/**
+ * Header cell — measured: ONE 48px row, white, text 14px/700 slate, no
+ * uppercase, a `--border-light` rule between cells, Period labels right-aligned
+ * and wrapping ("2021/12/31 -" over "2022/10/07"), "Summary" left.
+ */
+export const faithfulHeadCellSx = (theme: Theme) => ({
+  height: GRID.headerHeight,
+  boxSizing: "border-box" as const,
+  fontSize: "0.875rem",
+  fontWeight: 700,
   letterSpacing: 0,
-  textTransform: "none",
-  lineHeight: 1.3,
-  py: 0.75,
-  px: 1.25,
-  color: "text.secondary",
+  textTransform: "none" as const,
+  lineHeight: 1.25,
+  whiteSpace: "normal" as const,
+  verticalAlign: "middle" as const,
+  py: 0.5,
+  px: GRID.cellPadX,
   borderRight: "1px solid",
   borderRightColor: "divider",
-} as const;
+  ...slateText(theme),
+});
 
-/** Section row label: 11px/700 uppercase, letter-spacing .4px, slate text. */
-export const sectionLabelSx = {
+/** Section row label — measured: 11px/700 uppercase, .4px tracking, slate, at the band's foot. */
+export const sectionLabelSx = (theme: Theme) => ({
   fontSize: 11,
   fontWeight: 700,
   letterSpacing: "0.4px",
-  textTransform: "uppercase",
-  color: "text.secondary",
-  opacity: 0.85,
-} as const;
+  textTransform: "uppercase" as const,
+  lineHeight: 1.3,
+  ...slateText(theme),
+});
 
-/** A figure: 0.875rem/500, text.primary, tabular. */
-export const faithfulNumericSx = {
+/**
+ * The section band's cells — measured: 44px tall, `--bg-secondary`, the label
+ * sitting at the bottom (`align-items: flex-end`, 2px up), no column rules.
+ */
+export const sectionCellSx = (theme: Theme) => ({
+  ...slateFill(theme),
+  height: GRID.sectionHeight - 1,
+  verticalAlign: "bottom" as const,
+  pb: "4px",
+});
+
+/**
+ * A figure — measured: 14px/400 slate, right-aligned, 16px side padding, the
+ * row 42px tall, and NO vertical rule between data cells (AG's
+ * `--ag-cell-horizontal-border` is transparent); bold rows go to 600 via
+ * `rowSx`.
+ */
+export const faithfulNumericSx = (theme: Theme) => ({
+  height: GRID.rowHeight - 1,
+  boxSizing: "border-box" as const,
   fontSize: "0.875rem",
-  fontWeight: 500,
-  color: "text.primary",
-  py: 0.5,
-  px: 1.5,
-} as const;
+  fontWeight: 400,
+  lineHeight: 1.25,
+  py: 0,
+  px: GRID.cellPadX,
+  borderLeft: 0,
+  ...slateText(theme),
+});
 
-/** A row header: 0.875rem/500, text.primary, primary-200 right rule. */
-export const faithfulRowLabelSx = {
+/**
+ * A row header — measured: 14px/400 slate, 12.8px left inset, no indent under
+ * a section, and the pinned column's `--border-light` right rule.
+ */
+export const faithfulRowLabelSx = (theme: Theme) => ({
+  height: GRID.rowHeight - 1,
+  boxSizing: "border-box" as const,
   fontSize: "0.875rem",
-  fontWeight: 500,
-  py: 0.4,
-  px: 1.5,
-  borderRightColor: primaryTint(0.35),
-} as const;
+  fontWeight: 400,
+  lineHeight: 1.25,
+  py: 0,
+  pl: "12.8px",
+  pr: 1,
+  borderRightColor: "divider",
+  ...slateText(theme),
+});
 
-/** Grand total column (Customers' Total): orange gradient, white text, 700. */
-export const grandTotalCellSx = {
+/**
+ * Grand total column (Customers' Total): orange gradient, white text, 700.
+ * The white is declared under `applyStyles("light")` too, because `slateText`
+ * sets its light colour that way and a plain `color` loses to it.
+ */
+export const grandTotalCellSx = (theme: Theme) => ({
   backgroundColor: "transparent",
   backgroundImage: primaryGradient,
   color: cssVar("primary-contrastText"),
   fontWeight: 700,
-} as const;
+  ...theme.applyStyles("light", { color: cssVar("primary-contrastText") }),
+});
