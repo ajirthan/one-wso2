@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ARR Dashboard look — A · B · C review sheet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light; --ink: #1f2430; --muted: #5b6372; --rule: #e2e8f0; --accent: #c2410c; --bg: #fafafa; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 2; background: #fff; border-bottom: 1px solid var(--rule); padding: 14px 28px; display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: baseline; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  header .q { color: var(--muted); max-width: 70ch; }
+  header nav { margin-left: auto; display: flex; gap: 6px; }
+  header nav button { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; background: #fff; cursor: pointer; }
+  header nav button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: #fff7ed; }
+  main { padding: 20px 28px 60px; max-width: 1920px; margin: 0 auto; }
+  .legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 6px 0 22px; }
+  .legend div { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+  .legend b { display: block; font-size: 14px; }
+  .legend span { color: var(--muted); font-size: 13px; }
+  section { margin: 0 0 42px; }
+  section h2 { font-size: 16px; font-weight: 600; margin: 0 0 2px; }
+  section h2 small { font-weight: 400; color: var(--muted); margin-left: 8px; }
+  section p.look { margin: 0 0 12px; color: var(--muted); font-size: 14px; max-width: 110ch; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  figure.ref { border-color: #c2410c55; }
+  .placeholder { display: flex; align-items: center; justify-content: center; min-height: 160px; color: var(--muted); font-size: 13px; background: #fff; border: 1px dashed var(--rule); border-radius: 10px; text-align: center; padding: 16px; }
+  .legend { grid-template-columns: repeat(4, 1fr); }
+  .grid .col { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  figure { margin: 0; background: #fff; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  figure a { display: block; }
+  figure img { display: block; width: 100%; height: auto; }
+  figure figcaption { padding: 6px 10px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; }
+  figure figcaption code { font-size: 11px; }
+  body.light-only .dark, body.dark-only .light { display: none; }
+  .note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--rule); padding: 4px 12px; margin: 10px 0 0; }
+  footer { padding: 18px 28px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--rule); background: #fff; }
+  footer code { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ARR Dashboard look — A · B · C</h1>
+  <div class="q">Rebuilt in Oxygen tokens with the agreed anatomy, does it read as <em>the same screen</em> as the standalone app, light and dark — and how faithful should the chrome be where the source's look meets the shell? A mix ("A's tabs on C's card") is a valid answer.</div>
+  <div class="q"><b>Verdict (2026-10-07): A — Faithful</b>, with the tables brought to the standalone's measured geometry (commit <code>96479ab9</code>; these are the frames after it). Compare column 1 (standalone, mis-stg) with column A on screens 1, 2 and 3.</div>
+  <nav aria-label="Colour scheme filter">
+    <button type="button" data-mode="" aria-pressed="true">Light + dark</button>
+    <button type="button" data-mode="light-only" aria-pressed="false">Light only</button>
+    <button type="button" data-mode="dark-only" aria-pressed="false">Dark only</button>
+  </nav>
+</header>
+<main>
+  <div class="legend">
+    <div><b>Standalone (mis-stg)</b><span>The app Finance uses today, captured on <code>mis-stg.apps.wso2.com</code> 2026-10-07 with real data. Light only — it has no dark scheme. The reference every variant is judged against.</span></div>
+    <div><b>A — Faithful</b><span>The standalone app's chrome, rebuilt in Oxygen tokens: 3px underline tabs, pill Units, gradient filter card, title in brand text, uppercase filled Export, slate section bands, bold totals with a rule.</span></div>
+    <div><b>B — Shell-native</b><span>The same anatomy in Oxygen defaults: Oxygen tabs and toggle groups, outlined card, Oxygen table header, primary colour only where Oxygen puts it. What "parity through tokens" looks like if it collapses into every other One WSO2 screen.</span></div>
+    <div><b>C — Faithful on shell surfaces</b><span>A's tabs, pills and per-grid header, on B's outlined card, Oxygen buttons and Oxygen table surface.</span></div>
+  </div>
+
+  <section id="s1">
+    <h2>1 · Build<small>Annually · BU Build · All Units · five Periods</small></h2>
+    <p class="look">Carries every chrome decision: Period segments, the seven Table tabs, Unit pills, the filter card, the per-grid header, and the grid's header, section bands, hover and totals rule.</p>
+    <div class="grid">
+      <div class="col">Standalone (mis-stg)</div><div class="col">A · Faithful</div><div class="col">B · Shell-native</div><div class="col">C · Faithful on shell surfaces</div>
+      <figure class="light ref"><a href="standalone/S-1-build-light.png" target="_blank"><img loading="lazy" src="standalone/S-1-build-light.png" alt="Standalone, Build"></a><figcaption><span>Light · reference</span><code>S-1-build-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/A-1-build-light.png" target="_blank"><img loading="lazy" src="screenshots/A-1-build-light.png" alt="A, Build, light"></a><figcaption><span>Light</span><code>A-1-build-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/B-1-build-light.png" target="_blank"><img loading="lazy" src="screenshots/B-1-build-light.png" alt="B, Build, light"></a><figcaption><span>Light</span><code>B-1-build-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/C-1-build-light.png" target="_blank"><img loading="lazy" src="screenshots/C-1-build-light.png" alt="C, Build, light"></a><figcaption><span>Light</span><code>C-1-build-light.png</code></figcaption></figure>
+      <div class="dark placeholder">The standalone app is light-only; no dark reference exists.</div>
+      <figure class="dark"><a href="screenshots/A-1-build-dark.png" target="_blank"><img loading="lazy" src="screenshots/A-1-build-dark.png" alt="A, Build, dark"></a><figcaption><span>Dark</span><code>A-1-build-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/B-1-build-dark.png" target="_blank"><img loading="lazy" src="screenshots/B-1-build-dark.png" alt="B, Build, dark"></a><figcaption><span>Dark</span><code>B-1-build-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/C-1-build-dark.png" target="_blank"><img loading="lazy" src="screenshots/C-1-build-dark.png" alt="C, Build, dark"></a><figcaption><span>Dark</span><code>C-1-build-dark.png</code></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2>2 · Customers<small>BU only on · Totals only on · scrolled to the Period Totals (the deck-cropping case)</small></h2>
+    <p class="look">The frozen Account Name column and the Total columns are what gets cropped into a slide. Note the Total column is weight 600 in all three — the standalone app's orange gradient turned out to be dead CSS (never applied); it is shown separately below so it can be chosen deliberately rather than inherited.</p>
+    <div class="grid">
+      <div class="col">Standalone (mis-stg)</div><div class="col">A · Faithful</div><div class="col">B · Shell-native</div><div class="col">C · Faithful on shell surfaces</div>
+      <figure class="light ref"><a href="standalone/S-2-customers-totals-light.png" target="_blank"><img loading="lazy" src="standalone/S-2-customers-totals-light.png" alt="Standalone, Customers"></a><figcaption><span>Light · reference</span><code>S-2-customers-totals-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/A-2-customers-totals-light.png" target="_blank"><img loading="lazy" src="screenshots/A-2-customers-totals-light.png" alt="A, Customers, light"></a><figcaption><span>Light</span><code>A-2-customers-totals-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/B-2-customers-totals-light.png" target="_blank"><img loading="lazy" src="screenshots/B-2-customers-totals-light.png" alt="B, Customers, light"></a><figcaption><span>Light</span><code>B-2-customers-totals-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/C-2-customers-totals-light.png" target="_blank"><img loading="lazy" src="screenshots/C-2-customers-totals-light.png" alt="C, Customers, light"></a><figcaption><span>Light</span><code>C-2-customers-totals-light.png</code></figcaption></figure>
+      <div class="dark placeholder">The standalone app is light-only; no dark reference exists.</div>
+      <figure class="dark"><a href="screenshots/A-2-customers-totals-dark.png" target="_blank"><img loading="lazy" src="screenshots/A-2-customers-totals-dark.png" alt="A, Customers, dark"></a><figcaption><span>Dark</span><code>A-2-customers-totals-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/B-2-customers-totals-dark.png" target="_blank"><img loading="lazy" src="screenshots/B-2-customers-totals-dark.png" alt="B, Customers, dark"></a><figcaption><span>Dark</span><code>B-2-customers-totals-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/C-2-customers-totals-dark.png" target="_blank"><img loading="lazy" src="screenshots/C-2-customers-totals-dark.png" alt="C, Customers, dark"></a><figcaption><span>Dark</span><code>C-2-customers-totals-dark.png</code></figcaption></figure>
+    </div>
+    <p class="note">Option, A light only: the orange grand-total gradient the handoff originally described. <a href="screenshots/A-2-customers-totals-light-GRADIENT-OPTION.png" target="_blank">A-2-customers-totals-light-GRADIENT-OPTION.png</a></p>
+  </section>
+
+  <section id="s4">
+    <h2>4 · ARR Analysis<small>KPI tiles · Partner Type pie · vertical Industry bars with share labels · accounts grid</small></h2>
+    <p class="look">The ARR figure in brand text, the pie and bar treatments, and the per-grid header above the accounts grid. B keeps the port's validated blue/orange chart palette; A and C use primary plus a neutral.</p>
+    <div class="grid">
+      <div class="col">Standalone (mis-stg)</div><div class="col">A · Faithful</div><div class="col">B · Shell-native</div><div class="col">C · Faithful on shell surfaces</div>
+      <figure class="light ref"><a href="standalone/S-4-analysis-light.png" target="_blank"><img loading="lazy" src="standalone/S-4-analysis-light.png" alt="Standalone, ARR Analysis"></a><figcaption><span>Light · reference</span><code>S-4-analysis-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/A-4-analysis-light.png" target="_blank"><img loading="lazy" src="screenshots/A-4-analysis-light.png" alt="A, Analysis, light"></a><figcaption><span>Light</span><code>A-4-analysis-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/B-4-analysis-light.png" target="_blank"><img loading="lazy" src="screenshots/B-4-analysis-light.png" alt="B, Analysis, light"></a><figcaption><span>Light</span><code>B-4-analysis-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/C-4-analysis-light.png" target="_blank"><img loading="lazy" src="screenshots/C-4-analysis-light.png" alt="C, Analysis, light"></a><figcaption><span>Light</span><code>C-4-analysis-light.png</code></figcaption></figure>
+      <div class="dark placeholder">The standalone app is light-only; no dark reference exists.</div>
+      <figure class="dark"><a href="screenshots/A-4-analysis-dark.png" target="_blank"><img loading="lazy" src="screenshots/A-4-analysis-dark.png" alt="A, Analysis, dark"></a><figcaption><span>Dark</span><code>A-4-analysis-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/B-4-analysis-dark.png" target="_blank"><img loading="lazy" src="screenshots/B-4-analysis-dark.png" alt="B, Analysis, dark"></a><figcaption><span>Dark</span><code>B-4-analysis-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/C-4-analysis-dark.png" target="_blank"><img loading="lazy" src="screenshots/C-4-analysis-dark.png" alt="C, Analysis, dark"></a><figcaption><span>Dark</span><code>C-4-analysis-dark.png</code></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2>3 · Region Summary<small>Exit ARR view · Sales Region cut</small></h2>
+    <p class="look">The View / Region Type segments (A and C: the source's uppercase-labelled segments; B: Oxygen's toggle group), the Totals only control, and a grouped two-row header.</p>
+    <div class="grid">
+      <div class="col">Standalone (mis-stg)</div><div class="col">A · Faithful</div><div class="col">B · Shell-native</div><div class="col">C · Faithful on shell surfaces</div>
+      <figure class="light ref"><a href="standalone/S-3-region-summary-light.png" target="_blank"><img loading="lazy" src="standalone/S-3-region-summary-light.png" alt="Standalone, Region Summary"></a><figcaption><span>Light · reference</span><code>S-3-region-summary-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/A-3-region-summary-light.png" target="_blank"><img loading="lazy" src="screenshots/A-3-region-summary-light.png" alt="A, Region Summary, light"></a><figcaption><span>Light</span><code>A-3-region-summary-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/B-3-region-summary-light.png" target="_blank"><img loading="lazy" src="screenshots/B-3-region-summary-light.png" alt="B, Region Summary, light"></a><figcaption><span>Light</span><code>B-3-region-summary-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/C-3-region-summary-light.png" target="_blank"><img loading="lazy" src="screenshots/C-3-region-summary-light.png" alt="C, Region Summary, light"></a><figcaption><span>Light</span><code>C-3-region-summary-light.png</code></figcaption></figure>
+      <div class="dark placeholder">The standalone app is light-only; no dark reference exists.</div>
+      <figure class="dark"><a href="screenshots/A-3-region-summary-dark.png" target="_blank"><img loading="lazy" src="screenshots/A-3-region-summary-dark.png" alt="A, Region Summary, dark"></a><figcaption><span>Dark</span><code>A-3-region-summary-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/B-3-region-summary-dark.png" target="_blank"><img loading="lazy" src="screenshots/B-3-region-summary-dark.png" alt="B, Region Summary, dark"></a><figcaption><span>Dark</span><code>B-3-region-summary-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/C-3-region-summary-dark.png" target="_blank"><img loading="lazy" src="screenshots/C-3-region-summary-dark.png" alt="C, Region Summary, dark"></a><figcaption><span>Dark</span><code>C-3-region-summary-dark.png</code></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2>5 · Customer drill-down<small>Opening ARR, first Period · Export ▾ menu open (CSV · Excel · PDF)</small></h2>
+    <p class="look">The dialog's table header (A: the source's non-uppercase header; B and C: Oxygen's) and the one Export menu that will sit at all six export points.</p>
+    <div class="grid">
+      <div class="col">Standalone (mis-stg)</div><div class="col">A · Faithful</div><div class="col">B · Shell-native</div><div class="col">C · Faithful on shell surfaces</div>
+      <figure class="light ref"><a href="standalone/S-5-drilldown-light.png" target="_blank"><img loading="lazy" src="standalone/S-5-drilldown-light.png" alt="Standalone, drill-down"></a><figcaption><span>Light · reference</span><code>S-5-drilldown-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/A-5-drilldown-export-light.png" target="_blank"><img loading="lazy" src="screenshots/A-5-drilldown-export-light.png" alt="A, drill-down, light"></a><figcaption><span>Light</span><code>A-5-drilldown-export-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/B-5-drilldown-export-light.png" target="_blank"><img loading="lazy" src="screenshots/B-5-drilldown-export-light.png" alt="B, drill-down, light"></a><figcaption><span>Light</span><code>B-5-drilldown-export-light.png</code></figcaption></figure>
+      <figure class="light"><a href="screenshots/C-5-drilldown-export-light.png" target="_blank"><img loading="lazy" src="screenshots/C-5-drilldown-export-light.png" alt="C, drill-down, light"></a><figcaption><span>Light</span><code>C-5-drilldown-export-light.png</code></figcaption></figure>
+      <div class="dark placeholder">The standalone app is light-only; no dark reference exists.</div>
+      <figure class="dark"><a href="screenshots/A-5-drilldown-export-dark.png" target="_blank"><img loading="lazy" src="screenshots/A-5-drilldown-export-dark.png" alt="A, drill-down, dark"></a><figcaption><span>Dark</span><code>A-5-drilldown-export-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/B-5-drilldown-export-dark.png" target="_blank"><img loading="lazy" src="screenshots/B-5-drilldown-export-dark.png" alt="B, drill-down, dark"></a><figcaption><span>Dark</span><code>B-5-drilldown-export-dark.png</code></figcaption></figure>
+      <figure class="dark"><a href="screenshots/C-5-drilldown-export-dark.png" target="_blank"><img loading="lazy" src="screenshots/C-5-drilldown-export-dark.png" alt="C, drill-down, dark"></a><figcaption><span>Dark</span><code>C-5-drilldown-export-dark.png</code></figcaption></figure>
+    </div>
+  </section>
+</main>
+<footer>
+  Frames are 1280×1548 captures of branch <code>prototype/mis-look</code> at <code>96479ab9</code> on fixture data, taken 2026-10-07 after the table parity pass; the same frames before it are in <code>screenshots-2026-10-07-pre-parity/</code>. Live, with the dev server on port 3000: <code>http://localhost:3000/finance/mis/arr-build?variant=A</code> (also <code>B</code>, <code>C</code>; <code>&amp;table=customers</code>, <code>&amp;table=region-summary</code>; <code>/finance/mis/analysis?variant=A</code>). Verdict (2026-10-07): <b>A — Faithful</b>, confirmed after the parity pass. The findings and the measured table are in <code>HANDOFF-return.md</code> beside this file.
+</footer>
+<script>
+  document.querySelectorAll('header nav button').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.body.className = button.dataset.mode;
+      document.querySelectorAll('header nav button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+    });
+  });
+</script>
+</body>
+</html>
