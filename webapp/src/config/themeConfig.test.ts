@@ -24,6 +24,7 @@ import {
   isThemeKey,
   resolveTheme,
 } from "@config/themeConfig";
+import { contrastRatio, parseColor } from "@utils/contrastText";
 
 /**
  * The light-scheme primary, which is the cheapest stable fingerprint for "which
@@ -165,5 +166,76 @@ describe("DataGrid panel overlay", () => {
         expect.arrayContaining([...Object.keys(dataGridOf(THEMES[key])), "panelContent", "menu"]),
       );
     }
+  });
+});
+
+describe("WSO2 brand orange", () => {
+  type Primary = {
+    light: string;
+    main: string;
+    dark: string;
+    contrastText: string;
+    lightChannel: string;
+    mainChannel: string;
+    darkChannel: string;
+    contrastTextChannel: string;
+  };
+
+  function primary(scheme: "light" | "dark"): Primary {
+    const theme = resolveTheme("wso2") as unknown as {
+      colorSchemes: Record<"light" | "dark", { palette: { primary: Primary } }>;
+    };
+    return theme.colorSchemes[scheme].palette.primary;
+  }
+
+  function ratio(foreground: string, background: string): number {
+    const fg = parseColor(foreground);
+    const bg = parseColor(background);
+    if (!fg || !bg) throw new Error(`could not parse ${foreground} on ${background}`);
+    return contrastRatio(fg, bg);
+  }
+
+  it("points both schemes at orange 500 and the channels of those steps", () => {
+    for (const scheme of ["light", "dark"] as const) {
+      expect(primary(scheme)).toMatchObject({
+        light: "#FF6E47",
+        main: "#F14E23",
+        dark: "#D32F00",
+        contrastText: "#161616",
+        lightChannel: "255 110 71",
+        mainChannel: "241 78 35",
+        darkChannel: "211 47 0",
+        contrastTextChannel: "22 22 22",
+      });
+    }
+    const theme = resolveTheme("wso2") as unknown as {
+      generateStyleSheets: () => unknown;
+    };
+    const sheets = JSON.stringify(theme.generateStyleSheets());
+    expect(sheets).toContain("241 78 35");
+    expect(sheets).not.toContain("255 115 0");
+  });
+
+  it("keeps the resting label and the hover label at 4.5:1", () => {
+    for (const scheme of ["light", "dark"] as const) {
+      const palette = primary(scheme);
+      expect(ratio(palette.contrastText, palette.main)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio("#FFFFFF", palette.dark)).toBeGreaterThanOrEqual(4.5);
+    }
+
+    const theme = resolveTheme("wso2") as unknown as {
+      components?: {
+        MuiButton?: {
+          styleOverrides?: {
+            containedPrimary?: (props: { theme: unknown }) => { "&:hover"?: { color?: string } };
+          };
+        };
+      };
+    };
+    const containedPrimary = theme.components?.MuiButton?.styleOverrides?.containedPrimary;
+    expect(containedPrimary).toEqual(expect.any(Function));
+    const styles = containedPrimary!({ theme }) as Record<string, { color?: string }>;
+    const hoverKey = "&:hover";
+    expect(styles[hoverKey]?.color).toBe("#FFFFFF");
   });
 });

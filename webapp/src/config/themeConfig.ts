@@ -19,6 +19,14 @@
 // Oxygen's presets are used as shipped, except the WSO2 theme's primary.
 // Oxygen sets that to brand orange 600 (#D32F00). This app uses brand orange
 // 500 (#F14E23) and keeps the neighbouring steps: 400 for light, 600 for dark.
+// White on 500 is 3.59:1, under the 4.5:1 floor for the label, so the label is
+// neutral 950. No single colour clears 4.5:1 on both 500 and 600, so the
+// contained button's hover label stays white: Oxygen paints that hover white,
+// and white on 600 is 5.03:1.
+//
+// The channels are written beside the steps. extendTheme only fills a channel
+// that is missing, and Oxygen's base theme already filled these from #ff7300,
+// so a new main alone leaves hover and drag washes on that orange.
 
 import { deepmerge } from "@mui/utils";
 import { extendTheme } from "@mui/material/styles";
@@ -34,12 +42,28 @@ import {
 import type { OxygenTheme } from "@wso2/oxygen-ui/styles/OxygenThemeBase";
 import { withA11yOverrides } from "@config/a11yThemeOverrides";
 
-const BRAND_ORANGE = {
+/** `rgb(241, 78, 35)` as the space-separated channels MUI stores on a palette colour. */
+function rgbChannel(hex: string): string {
+  const digits = hex.slice(1);
+  return [0, 2, 4]
+    .map((start) => String(Number.parseInt(digits.slice(start, start + 2), 16)))
+    .join(" ");
+}
+
+const BRAND_ORANGE_STEPS = {
   light: "#FF6E47",
   main: "#F14E23",
   dark: "#D32F00",
-  contrastText: "#FFFFFF",
+  contrastText: "#161616",
 } as const;
+
+const BRAND_ORANGE = {
+  ...BRAND_ORANGE_STEPS,
+  lightChannel: rgbChannel(BRAND_ORANGE_STEPS.light),
+  mainChannel: rgbChannel(BRAND_ORANGE_STEPS.main),
+  darkChannel: rgbChannel(BRAND_ORANGE_STEPS.dark),
+  contrastTextChannel: rgbChannel(BRAND_ORANGE_STEPS.contrastText),
+};
 
 function withBrandOrangePrimary(theme: OxygenTheme): OxygenTheme {
   return extendTheme(
